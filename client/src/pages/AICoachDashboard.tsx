@@ -33,6 +33,7 @@ import { tacticalTemplates } from "@/data/tacticalTemplates";
 import { toast } from "sonner";
 import { trackSubscriptionStarted, trackSessionMilestone } from "@/lib/analytics";
 import { SessionResumeBanner } from "@/components/ai-coach/SessionResumeBanner";
+import { QuickStartGuide } from "@/components/QuickStartGuide";
 
 const WELCOME_SHOWN_KEY = "aiCoachDashboardWelcomeShown";
 const GUEST_PASS_KEY = "aiCoachGuestPassCode";
@@ -834,6 +835,10 @@ export default function AICoachDashboard() {
 
             {/* Messages - Maximized on mobile */}
             <div className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 space-y-3 lg:space-y-6 min-h-0">
+              {/* Quick Start Guide */}
+              {chatMessages.length === 0 && !currentSessionId && (
+                <QuickStartGuide page="chat" />
+              )}
               {chatMessages.length === 0 && !currentSessionId ? (
                 <div className="h-full flex flex-col items-center justify-center text-center px-4 py-8">
                   <div className="bg-[#F2F0E9] rounded-full p-6 mb-6">
@@ -1131,6 +1136,7 @@ export default function AICoachDashboard() {
           <div className="p-6">
             {/* Goals Section */}
             <div className="max-w-2xl mx-auto">
+              <QuickStartGuide page="goals" />
               <h2 className="text-2xl font-semibold text-[#2C2C2C] mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Goals
               </h2>
@@ -1179,6 +1185,7 @@ export default function AICoachDashboard() {
 
         {activeTab === "commitments" && (
           <div className="p-6 max-w-2xl mx-auto">
+            <QuickStartGuide page="commitments" />
             <h2 className="text-3xl font-semibold text-[#2C2C2C] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
               Your Commitments
             </h2>
@@ -1196,6 +1203,7 @@ export default function AICoachDashboard() {
 
         {activeTab === "patterns" && (
           <div className="p-6 max-w-4xl mx-auto">
+            <QuickStartGuide page="patterns" />
             <h2 className="text-3xl font-semibold text-[#2C2C2C] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
               Behavioral Patterns
             </h2>

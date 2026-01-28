@@ -16,6 +16,7 @@ import {
   MessageCircle, Calendar, CheckCircle, ArrowRight, 
   Bookmark, Clock, TrendingUp 
 } from "lucide-react";
+import { QuickStartGuide } from "@/components/QuickStartGuide";
 
 export default function AICoachResume() {
   const { user, isLoading: authLoading } = useAuth();
@@ -233,6 +234,11 @@ export default function AICoachResume() {
               </Link>
             )}
           </div>
+        </div>
+        
+        {/* Quick Start Guide */}
+        <div className="mb-16 relative z-10">
+          <QuickStartGuide page="dashboard" />
         </div>
         
         {/* Session Summary - Only for authenticated users */}

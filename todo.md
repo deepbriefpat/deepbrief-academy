@@ -1889,3 +1889,31 @@ All tests pass, verifying:
 - [x] Increase visibility of "Add to Calendar" button
 - [x] Use stronger colors and better contrast
 - [x] Make button more prominent in the UI
+
+## User Guidance & Onboarding (User Requested - Jan 28)
+
+### Onboarding Tips & Tooltips
+- [x] Add welcome tooltip on first dashboard visit
+- [x] Add coach selection guidance
+- [x] Add commitment tracking explanation
+- [x] Add goal setting tips
+- [x] Add pattern recognition explainer
+
+### Quick Start Guide
+- [x] Create quick start guide component
+- [x] Add "How to Use This" sections to key pages
+- [ ] Add video/animation for voice input demo (mobile)
+- [ ] Implement progress persistence for onboarding flow
+
+### Feature Explanations
+- [x] Add help text to Goals page
+- [x] Add help text to Commitments page
+- [x] Add help text to Patterns page
+- [ ] Add help text to Session History
+- [x] Add privacy reassurance messaging
+
+### User Experience Enhancements
+- [ ] Add keyboard navigation (Enter/Escape) to flows
+- [x] Add contextual help icons with popovers
+- [ ] Add "What to Expect" section on resume page
+- [ ] Improve mobile text input prominence

@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `reminderPreference` enum('1_day','3_days','7_days','none') DEFAULT '3_days' NOT NULL;

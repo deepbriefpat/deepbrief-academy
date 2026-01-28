@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `selectedCoach` varchar(64) DEFAULT 'sarah';

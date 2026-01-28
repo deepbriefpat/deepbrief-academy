@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_sessions` ADD `mode` enum('coaching','execution') DEFAULT 'coaching' NOT NULL;

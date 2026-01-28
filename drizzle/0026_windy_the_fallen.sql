@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_commitments` ADD `check_in_email_sent` boolean DEFAULT false NOT NULL;

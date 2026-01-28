@@ -1,0 +1,1 @@
+ALTER TABLE `support_network_assessments` ADD `network_quality` enum('isolated','emerging','functional','thriving') NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_users` ADD `profile_picture_url` varchar(500);

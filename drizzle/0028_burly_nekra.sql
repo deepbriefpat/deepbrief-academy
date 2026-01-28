@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_sessions` ADD `scheduled_at` timestamp;

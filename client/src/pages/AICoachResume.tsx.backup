@@ -1,0 +1,386 @@
+/**
+ * Resume Session Landing Page
+ * 
+ * Bookmarkable page for returning users to quickly continue coaching
+ * Works for authenticated users, guest pass users, and demo users
+ */
+
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { getLoginUrl } from "@/const";
+import { Link, useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { 
+  MessageCircle, Calendar, CheckCircle, ArrowRight, 
+  Bookmark, Clock, TrendingUp 
+} from "lucide-react";
+
+export default function AICoachResume() {
+  const { user, isLoading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const [guestPassCode, setGuestPassCode] = useState<string | null>(null);
+  
+  // Check for guest pass code in localStorage (multiple possible keys)
+  useEffect(() => {
+    // Check for guest pass code stored during validation
+    const savedCode = localStorage.getItem("guestPassCode");
+    if (savedCode) {
+      setGuestPassCode(savedCode);
+      return;
+    }
+    
+    // Check for guest pass code in URL
+    const params = new URLSearchParams(window.location.search);
+    const codeFromUrl = params.get("code");
+    if (codeFromUrl) {
+      setGuestPassCode(codeFromUrl);
+      return;
+    }
+    
+    // Check for any guest pass history keys in localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("aiCoachGuestHistory_")) {
+        const code = key.replace("aiCoachGuestHistory_", "");
+        setGuestPassCode(code);
+        return;
+      }
+    }
+  }, []);
+  
+  // Fetch user data if authenticated
+  const { data: profile } = trpc.aiCoach.getProfile.useQuery(undefined, {
+    enabled: !!user,
+  });
+  
+  const { data: sessions } = trpc.aiCoach.getSessions.useQuery(
+    { limit: 3 },
+    { enabled: !!user }
+  );
+  
+  const { data: commitments } = trpc.aiCoach.getCommitments.useQuery(
+    {},
+    { enabled: !!user }
+  );
+  
+  const { data: subscription, isLoading: subscriptionLoading } = trpc.aiCoach.getSubscription.useQuery(
+    undefined,
+    { enabled: !!user }
+  );
+  
+  // Check if data is still loading
+  const isLoading = user && (subscriptionLoading || !subscription);
+  
+  // Determine user type and redirect path
+  const getUserType = () => {
+    if (user && (subscription?.status === "active" || subscription?.status === "trialing")) {
+      return "subscriber";
+    } else if (user && subscription?.status !== "active" && subscription?.status !== "trialing") {
+      return "needs_subscription";
+    } else if (guestPassCode) {
+      return "guest";
+    } else {
+      return "demo";
+    }
+  };
+  
+  const userType = getUserType();
+  
+  const handleContinue = () => {
+    if (userType === "subscriber") {
+      setLocation("/ai-coach/dashboard");
+    } else if (userType === "needs_subscription") {
+      setLocation("/ai-coach/subscribe");
+    } else if (userType === "guest") {
+      setLocation(`/ai-coach/guest?code=${guestPassCode}`);
+    } else {
+      setLocation("/ai-coach/demo");
+    }
+  };
+  
+  const getLastSessionInfo = () => {
+    if (!sessions || sessions.length === 0) return null;
+    
+    const lastSession = sessions[0];
+    const daysAgo = Math.floor(
+      (new Date().getTime() - new Date(lastSession.createdAt).getTime()) / 
+      (24 * 60 * 60 * 1000)
+    );
+    
+    // Safely parse messages with error handling
+    let messageCount = 0;
+    try {
+      if (lastSession.messages) {
+        const parsed = JSON.parse(lastSession.messages as string);
+        messageCount = Array.isArray(parsed) ? parsed.length : 0;
+      }
+    } catch (error) {
+      messageCount = 0;
+    }
+    
+    return {
+      date: new Date(lastSession.createdAt).toLocaleDateString(),
+      daysAgo,
+      messageCount,
+    };
+  };
+  
+  const lastSession = getLastSessionInfo();
+  const openCommitments = commitments?.filter(c => 
+    c.status === 'open' || c.status === 'pending' || c.status === 'in_progress'
+  ) || [];
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-navy-900 via-navy-800 to-navy-900">
+      {/* Header */}
+      <header className="border-b border-gold-400/20 bg-navy-900/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/">
+            <div className="flex items-center gap-3 cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center">
+                <MessageCircle className="w-6 h-6 text-navy-900" />
+              </div>
+              <span className="text-xl font-bold text-white">AI Executive Coach</span>
+            </div>
+          </Link>
+          
+          {!authLoading && !user && (
+            guestPassCode ? (
+              <Link href={`/ai-coach/guest?code=${guestPassCode}`}>
+                <Button size="lg" className="bg-gold-500 hover:bg-gold-600 text-navy-900 font-semibold px-8">
+                  Continue with Guest Pass
+                </Button>
+              </Link>
+            ) : (
+              <a href={getLoginUrl()}>
+                <Button size="lg" className="bg-gold-500 hover:bg-gold-600 text-navy-900 font-semibold px-8 text-lg">
+                  Sign In
+                </Button>
+              </a>
+            )
+          )}
+        </div>
+      </header>
+      
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-12 max-w-4xl">
+        {/* Loading Skeleton */}
+        {isLoading ? (
+          <div className="animate-pulse space-y-8">
+            <div className="text-center space-y-4">
+              <div className="h-12 bg-navy-800/50 rounded-lg w-3/4 mx-auto"></div>
+              <div className="h-6 bg-navy-800/50 rounded-lg w-1/2 mx-auto"></div>
+              <div className="h-14 bg-navy-800/50 rounded-lg w-64 mx-auto"></div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-32 bg-navy-800/50 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <>
+        {/* Welcome Back Section */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 bg-gold-500/10 border border-gold-400/30 rounded-full px-4 py-2 mb-6">
+            <Bookmark className="w-4 h-4 text-gold-400" />
+            <span className="text-gold-400 text-sm font-medium">Bookmark this page to return anytime</span>
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+            Welcome Back
+          </h1>
+          
+          <p className="text-xl text-gray-300 mb-8">
+            {userType === "subscriber" 
+              ? "Ready to continue your coaching journey?"
+              : userType === "needs_subscription"
+              ? "Complete your subscription to unlock full access"
+              : userType === "guest"
+              ? "Your guest coaching session is ready to continue"
+              : "Try 10 free coaching interactions"}
+          </p>
+          
+          <div className="flex flex-col gap-4 items-center">
+            <Button
+              onClick={handleContinue}
+              size="lg"
+              className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-navy-900 font-bold px-12 py-7 text-xl shadow-2xl shadow-gold-500/50 border-2 border-gold-300 transition-all duration-300 hover:scale-105"
+            >
+              {userType === "needs_subscription" ? "Start Free Trial" : "Continue Coaching Session"}
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            
+            {userType === "subscriber" && lastSession && (
+              <Link href="/ai-coach/dashboard?tab=history&expand=latest">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10 hover:text-gold-300 px-8 py-6 text-lg"
+                >
+                  <Clock className="w-5 h-5 mr-2" />
+                  Resume Previous Session
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+        
+        {/* Session Summary - Only for authenticated users */}
+        {userType === "subscriber" && (
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {/* Last Session */}
+            {lastSession && (
+              <Link href="/ai-coach/dashboard?tab=history">
+                <Card className="p-6 bg-navy-800/50 border-gold-400/20 cursor-pointer hover:bg-navy-800/70 transition-colors">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Clock className="w-5 h-5 text-gold-400" />
+                    <h3 className="font-semibold text-white">Last Session</h3>
+                  </div>
+                  <p className="text-gray-300 text-sm mb-2">
+                    {lastSession.daysAgo === 0 
+                      ? "Today" 
+                      : lastSession.daysAgo === 1 
+                      ? "Yesterday" 
+                      : `${lastSession.daysAgo} days ago`}
+                  </p>
+                  <p className="text-gray-400 text-xs">
+                    {lastSession.messageCount} messages exchanged
+                  </p>
+                </Card>
+              </Link>
+            )}
+            
+            {/* Open Commitments */}
+            <Link href="/ai-coach/dashboard?tab=commitments">
+              <Card className="p-6 bg-navy-800/50 border-gold-400/20 cursor-pointer hover:bg-navy-800/70 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <CheckCircle className="w-5 h-5 text-gold-400" />
+                  <h3 className="font-semibold text-white">Commitments</h3>
+                </div>
+                <p className="text-3xl font-bold text-white mb-2">
+                  {openCommitments.length}
+                </p>
+                <p className="text-gray-400 text-xs">
+                  {openCommitments.length === 0 
+                    ? "All loops closed" 
+                    : "open commitments"}
+                </p>
+              </Card>
+            </Link>
+            
+            {/* Total Sessions */}
+            <Link href="/ai-coach/dashboard?tab=analytics">
+              <Card className="p-6 bg-navy-800/50 border-gold-400/20 cursor-pointer hover:bg-navy-800/70 transition-colors">
+                <div className="flex items-center gap-3 mb-4">
+                  <TrendingUp className="w-5 h-5 text-gold-400" />
+                  <h3 className="font-semibold text-white">Progress</h3>
+                </div>
+                <p className="text-3xl font-bold text-white mb-2">
+                  {sessions?.length || 0}
+                </p>
+                <p className="text-gray-400 text-xs">
+                  coaching sessions
+                </p>
+              </Card>
+            </Link>
+          </div>
+        )}
+        
+        {/* What to Expect */}
+        <Card className="p-8 bg-navy-800/50 border-gold-400/20 mb-8">
+          <h2 className="text-2xl font-semibold text-white mb-6" style={{ fontFamily: "'Playfair Display', serif" }}>
+            What to Expect
+          </h2>
+          
+          <div className="space-y-4">
+            {userType === "subscriber" && openCommitments.length > 0 && (
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="w-4 h-4 text-gold-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-white mb-1">Accountability Check-In</h3>
+                  <p className="text-gray-300 text-sm">
+                    The coach will immediately ask about your {openCommitments.length} open commitment{openCommitments.length > 1 ? 's' : ''}. 
+                    Be ready to report what happened.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center flex-shrink-0">
+                <MessageCircle className="w-4 h-4 text-gold-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white mb-1">Direct Coaching</h3>
+                <p className="text-gray-300 text-sm">
+                  No fluff. The coach asks sharp questions, challenges assumptions, and helps you think clearly under pressure.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded-full bg-gold-500/20 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-4 h-4 text-gold-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white mb-1">Pattern Recognition</h3>
+                <p className="text-gray-300 text-sm">
+                  The AI tracks your behavioral patterns across sessions and surfaces insights you might be avoiding.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+        
+        {/* Quick Actions */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="p-6 bg-navy-800/50 border-gold-400/20 hover:border-gold-400/40 transition-colors">
+            <h3 className="font-semibold text-white mb-2">New to AI Coaching?</h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Learn how to get the most out of your coaching sessions
+            </p>
+            <Link href="/ai-coach/welcome">
+              <Button variant="outline" className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10 w-full">
+                View Best Practices
+              </Button>
+            </Link>
+          </Card>
+          
+          <Card className="p-6 bg-navy-800/50 border-gold-400/20 hover:border-gold-400/40 transition-colors">
+            <h3 className="font-semibold text-white mb-2">Want Deeper Work?</h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Book a 1-on-1 call with Patrick for intensive coaching
+            </p>
+            <a href="https://thedeepbrief.co.uk/book-call" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="border-gold-400/30 text-gold-400 hover:bg-gold-400/10 w-full">
+                <Calendar className="w-4 h-4 mr-2" />
+                Book a Call
+              </Button>
+            </a>
+          </Card>
+        </div>
+        
+        {/* Bookmark Instructions */}
+        <div className="mt-12 p-6 bg-gold-500/10 border border-gold-400/30 rounded-lg">
+          <h3 className="font-semibold text-gold-400 mb-2 flex items-center gap-2">
+            <Bookmark className="w-5 h-5" />
+            Bookmark This Page
+          </h3>
+          <p className="text-gray-300 text-sm">
+            Save this URL to quickly return to your coaching sessions: 
+            <code className="ml-2 px-2 py-1 bg-navy-900/50 rounded text-gold-400 text-xs">
+              {window.location.origin}/ai-coach/resume
+            </code>
+          </p>
+        </div>
+        </>
+        )}
+      </main>
+    </div>
+  );
+}

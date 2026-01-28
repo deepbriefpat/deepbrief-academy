@@ -1,0 +1,1 @@
+ALTER TABLE `email_subscribers` MODIFY COLUMN `source` enum('assessment_results','booking_confirmation','general','calm_protocol','pressure_guide_modal','pressure_audit') NOT NULL;

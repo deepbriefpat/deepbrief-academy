@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_users` ADD `preferred_name` varchar(100);

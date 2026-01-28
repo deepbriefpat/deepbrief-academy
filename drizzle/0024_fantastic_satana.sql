@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_commitments` ADD `progress` int DEFAULT 0 NOT NULL;

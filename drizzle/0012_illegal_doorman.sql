@@ -1,0 +1,1 @@
+DROP TABLE `email_automation_sequences`;

@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_commitments` ADD `last_notified` timestamp;

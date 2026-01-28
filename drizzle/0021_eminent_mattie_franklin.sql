@@ -1,0 +1,1 @@
+ALTER TABLE `coaching_users` ADD `coaching_preferences` text;

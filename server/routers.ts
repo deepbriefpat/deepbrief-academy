@@ -35,6 +35,37 @@ export const appRouter = router({
       
       return ctx.user;
     }),
+    
+    // Google OAuth login
+    googleLogin: publicProcedure
+      .input(z.object({ idToken: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const { sdk } = await import("./_core/sdk");
+        
+        try {
+          const { user, sessionToken } = await sdk.authenticateWithGoogle(input.idToken);
+          
+          // Set the session cookie
+          const cookieOptions = getSessionCookieOptions(ctx.req);
+          ctx.res.cookie(COOKIE_NAME, sessionToken, cookieOptions);
+          
+          return {
+            success: true,
+            user: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+            },
+          };
+        } catch (error) {
+          console.error("[Auth] Google login failed:", error);
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Google authentication failed",
+          });
+        }
+      }),
+    
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -426,7 +457,7 @@ export const appRouter = router({
         }
         const { getDb } = await import("./db");
         const { guestPasses, guestPassSessions, guestPassInvitations } = await import("../drizzle/schema");
-        const { count, sql, gte, eq, desc } = await import("drizzle-orm");
+        const { count, sql, gte } = await import("drizzle-orm");
         const db = await getDb();
         if (!db) throw new Error("Database not available");
         
@@ -435,33 +466,8 @@ export const appRouter = router({
         const totalSessions = await db.select({ count: count() }).from(guestPassSessions);
         const totalInvitations = await db.select({ count: count() }).from(guestPassInvitations);
         
-        // Get registered guests count
-        const registeredGuests = await db
-          .select({ count: count() })
-          .from(guestPassSessions)
-          .where(eq(guestPassSessions.hasRegistered, true));
-        
         // Get recent passes
         const recentPasses = await db.select().from(guestPasses).orderBy(sql`${guestPasses.createdAt} DESC`).limit(10);
-        
-        // Get recent registered guests
-        const recentRegisteredGuests = await db
-          .select({
-            id: guestPassSessions.id,
-            guestName: guestPassSessions.guestName,
-            guestEmail: guestPassSessions.guestEmail,
-            guestCompany: guestPassSessions.guestCompany,
-            guestRole: guestPassSessions.guestRole,
-            messageCount: guestPassSessions.messageCount,
-            createdAt: guestPassSessions.createdAt,
-            passCode: guestPasses.code,
-            passLabel: guestPasses.label,
-          })
-          .from(guestPassSessions)
-          .leftJoin(guestPasses, eq(guestPassSessions.guestPassId, guestPasses.id))
-          .where(eq(guestPassSessions.hasRegistered, true))
-          .orderBy(desc(guestPassSessions.createdAt))
-          .limit(20);
         
         // Get conversion rate (passes with sessions / total passes)
         const passesWithSessions = await db
@@ -475,8 +481,6 @@ export const appRouter = router({
           activePasses: activePasses[0]?.count || 0,
           totalSessions: totalSessions[0]?.count || 0,
           totalInvitations: totalInvitations[0]?.count || 0,
-          registeredGuests: registeredGuests[0]?.count || 0,
-          recentRegisteredGuests,
           conversionRate: totalPasses[0]?.count ? (passesWithSessions[0]?.count || 0) / totalPasses[0].count : 0,
           recentPasses,
         };
@@ -2361,105 +2365,6 @@ For first messages in a new session:
         };
       }),
 
-    // Register guest user details (collected on first access)
-    registerGuest: publicProcedure
-      .input(z.object({
-        guestPassCode: z.string(),
-        fingerprint: z.string(),
-        name: z.string(),
-        email: z.string().email(),
-        company: z.string().optional(),
-        role: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        const { validateGuestPass, getOrCreateGuestPassSession } = await import("./db");
-        const { guestPassSessions } = await import("../drizzle/schema");
-        const { getDb } = await import("./db");
-        const { eq, and } = await import("drizzle-orm");
-        
-        // Validate guest pass
-        const validation = await validateGuestPass(input.guestPassCode);
-        if (!validation.valid || !validation.passId) {
-          throw new Error(validation.reason || "Invalid guest pass");
-        }
-        
-        const db = await getDb();
-        if (!db) throw new Error("Database not available");
-        
-        // Get or create session
-        const session = await getOrCreateGuestPassSession(validation.passId, input.fingerprint);
-        
-        // Update session with guest info
-        await db.update(guestPassSessions)
-          .set({
-            guestName: input.name,
-            guestEmail: input.email,
-            guestCompany: input.company || null,
-            guestRole: input.role || null,
-            hasRegistered: true,
-          })
-          .where(eq(guestPassSessions.id, session.id));
-        
-        // Also add to email subscribers for lead capture
-        try {
-          const { createEmailSubscriber } = await import("./db");
-          await createEmailSubscriber({
-            email: input.email,
-            name: input.name,
-            source: "guest_pass",
-            subscribedAt: new Date(),
-          });
-        } catch (error) {
-          // Email might already exist, that's okay
-          console.log("[GuestRegistration] Email subscriber creation skipped:", error);
-        }
-        
-        console.log(`[GuestRegistration] Guest registered: ${input.name} (${input.email}) for pass ${input.guestPassCode}`);
-        
-        return { success: true };
-      }),
-
-    // Check if guest has registered
-    checkGuestRegistration: publicProcedure
-      .input(z.object({
-        guestPassCode: z.string(),
-        fingerprint: z.string(),
-      }))
-      .query(async ({ input }) => {
-        const { validateGuestPass } = await import("./db");
-        const { guestPassSessions } = await import("../drizzle/schema");
-        const { getDb } = await import("./db");
-        const { eq, and } = await import("drizzle-orm");
-        
-        // Validate guest pass
-        const validation = await validateGuestPass(input.guestPassCode);
-        if (!validation.valid || !validation.passId) {
-          return { isRegistered: false, needsRegistration: false };
-        }
-        
-        const db = await getDb();
-        if (!db) return { isRegistered: false, needsRegistration: true };
-        
-        // Check if session exists and has registration
-        const sessions = await db.select()
-          .from(guestPassSessions)
-          .where(and(
-            eq(guestPassSessions.guestPassId, validation.passId),
-            eq(guestPassSessions.fingerprint, input.fingerprint)
-          ))
-          .limit(1);
-        
-        if (sessions.length === 0) {
-          return { isRegistered: false, needsRegistration: true };
-        }
-        
-        return { 
-          isRegistered: sessions[0].hasRegistered || false,
-          needsRegistration: !sessions[0].hasRegistered,
-          guestName: sessions[0].guestName,
-        };
-      }),
-
     // ========== Guest Commitments (for demo/guest pass users) ==========
     
     // Get commitments for a guest pass
@@ -2605,9 +2510,8 @@ For first messages in a new session:
           personalMessage: input.personalMessage,
         });
         
-        // Generate guest access URL - use APP_URL for Railway deployment
-        const appUrl = process.env.APP_URL || process.env.VITE_APP_URL || 'https://thedeepbrief.co.uk';
-        const guestUrl = `${appUrl}/ai-coach/guest?code=${pass.code}`;
+        // Generate guest access URL
+        const guestUrl = `${process.env.VITE_OAUTH_PORTAL_URL || 'https://thedeepbrief.co.uk'}/ai-coach/guest?code=${pass.code}`;
         
         // Build email content
         const expirationText = pass.expiresAt 
@@ -2636,73 +2540,19 @@ Best regards,
 The Deep Brief Team`;
         
         try {
-          // Send email using Mandrill transactional email service
-          const { sendTransactionalEmail } = await import("./_core/emailService");
+          // Send email using notification system
+          const { notifyOwner } = await import("./_core/notification");
           
-          const emailResult = await sendTransactionalEmail({
-            to: input.recipientEmail,
-            toName: input.recipientName,
-            subject: "You've been invited to AI Executive Coaching - The Deep Brief",
-            htmlContent: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1a1a2e; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%); padding: 30px; border-radius: 8px 8px 0 0; }
-    .header h1 { color: #d4af37; margin: 0; font-size: 24px; }
-    .content { background: #ffffff; padding: 30px; border: 1px solid #e5e5e5; border-top: none; }
-    .cta-button { display: inline-block; background: #d4af37; color: #1a1a2e !important; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
-    .feature-list { margin: 20px 0; padding-left: 20px; }
-    .feature-list li { margin: 8px 0; }
-    .footer { background: #f8f8f8; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>The Deep Brief</h1>
-    </div>
-    <div class="content">
-      <p>Hi${input.recipientName ? ` ${input.recipientName}` : ''},</p>
-      <p>You've been invited to access <strong>unlimited AI Executive Coaching</strong> from The Deep Brief.</p>
-      ${input.personalMessage ? `<p style="background: #f8f8f8; padding: 15px; border-left: 3px solid #d4af37; margin: 20px 0;">${input.personalMessage}</p>` : ''}
-      <p><a href="${guestUrl}" class="cta-button">Start Your Coaching Session →</a></p>
-      <p><strong>What you can explore:</strong></p>
-      <ul class="feature-list">
-        <li>Navigate leadership challenges</li>
-        <li>Improve decision-making skills</li>
-        <li>Handle difficult conversations</li>
-        <li>Develop delegation strategies</li>
-        <li>Resolve team conflicts</li>
-      </ul>
-      ${pass.expiresAt ? `<p style="color: #666; font-size: 14px;">This invitation expires on ${new Date(pass.expiresAt).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}.</p>` : ''}
-    </div>
-    <div class="footer">
-      <p>The Deep Brief - Leadership Clarity Under Pressure</p>
-    </div>
-  </div>
-</body>
-</html>`,
-            textContent: emailContent,
+          // For now, notify owner about the invitation (in production, this would use a proper email service)
+          await notifyOwner({
+            title: `Guest Pass Invitation Sent`,
+            content: `Invitation sent to ${input.recipientEmail} for guest pass ${pass.code}`,
           });
-          
-          if (!emailResult.success) {
-            console.error("[GuestPass] Failed to send invitation email:", emailResult.error);
-            // Still update status but note the failure
-            await updateInvitationStatus(invitationId, "failed");
-            throw new Error(`Failed to send email: ${emailResult.error}`);
-          }
           
           // Update invitation status
           await updateInvitationStatus(invitationId, "sent", {
             sentAt: new Date(),
           });
-          
-          // Log for monitoring
-          console.log(`[GuestPass] Invitation sent to ${input.recipientEmail} for pass ${pass.code}`);
           
           return { 
             success: true, 

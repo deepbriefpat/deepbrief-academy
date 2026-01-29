@@ -24,7 +24,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Strategic Leadership Coach",
     description: "Former VP of Operations with 15 years coaching executives through high-stakes decisions and organizational change. Brings systematic thinking to complex leadership challenges.",
     specialties: ["Strategic Planning", "Decision-Making", "Change Management"],
-    avatar: "/avatars/sarah-mitchell.png",
+    avatar: "/avatars/sarah-mitchell.webp",
     style: "Direct, analytical, focused on frameworks and systems thinking"
   },
   {
@@ -34,7 +34,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Team Dynamics Specialist",
     description: "Expert in building high-performing teams and navigating complex interpersonal dynamics. Specializes in helping leaders create psychological safety and trust.",
     specialties: ["Team Building", "Conflict Resolution", "Communication"],
-    avatar: "/avatars/elena-rodriguez.png",
+    avatar: "/avatars/elena-rodriguez.webp",
     style: "Empathetic, relationship-focused, asks powerful questions"
   },
   {
@@ -44,7 +44,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Executive Performance Coach",
     description: "Specializes in helping leaders manage pressure, prevent burnout, and maintain peak performance under demanding conditions. Former Fortune 500 executive.",
     specialties: ["Stress Management", "Work-Life Integration", "Resilience"],
-    avatar: "/avatars/jennifer-chen.png",
+    avatar: "/avatars/jennifer-chen.webp",
     style: "Supportive, practical, focused on sustainable habits"
   },
   {
@@ -54,7 +54,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Innovation & Change Catalyst",
     description: "Helps leaders drive innovation, manage organizational transformation, and navigate ambiguity with confidence. Background in tech startups and scale-ups.",
     specialties: ["Innovation Strategy", "Change Leadership", "Agile Thinking"],
-    avatar: "/avatars/maya-patel.png",
+    avatar: "/avatars/maya-patel.webp",
     style: "Creative, forward-thinking, challenges conventional approaches"
   },
   {
@@ -64,7 +64,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Executive Presence Coach",
     description: "Expert in helping leaders develop gravitas, communicate with impact, and build authentic executive presence in high-stakes environments.",
     specialties: ["Executive Presence", "Public Speaking", "Influence"],
-    avatar: "/avatars/rebecca-thompson.png",
+    avatar: "/avatars/rebecca-thompson.webp",
     style: "Confident, polished, focused on authentic leadership"
   },
   {
@@ -74,7 +74,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Diversity & Inclusion Leader",
     description: "Specializes in helping leaders navigate diversity challenges, build inclusive cultures, and lead with cultural intelligence in global organizations.",
     specialties: ["Inclusive Leadership", "Cultural Intelligence", "Equity"],
-    avatar: "/avatars/aisha-williams.png",
+    avatar: "/avatars/aisha-williams.webp",
     style: "Thoughtful, values-driven, bridges different perspectives"
   },
   {
@@ -84,7 +84,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "First-Time Manager Coach",
     description: "Dedicated to helping new leaders build confidence, develop their leadership voice, and navigate the transition from individual contributor to manager.",
     specialties: ["New Manager Transition", "Delegation", "Feedback Skills"],
-    avatar: "/avatars/sophie-anderson.png",
+    avatar: "/avatars/sophie-anderson.webp",
     style: "Patient, encouraging, breaks down complex concepts simply"
   },
   {
@@ -94,7 +94,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Crisis Leadership Specialist",
     description: "Former crisis management consultant who helps leaders navigate high-pressure situations, make tough calls, and communicate effectively during uncertainty.",
     specialties: ["Crisis Management", "Tough Decisions", "Stakeholder Communication"],
-    avatar: "/avatars/olivia-martinez.png",
+    avatar: "/avatars/olivia-martinez.webp",
     style: "Calm under pressure, decisive, focuses on clarity and action"
   },
 
@@ -106,7 +106,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Performance Under Pressure Coach",
     description: "Former athlete and executive coach specializing in peak performance, mental resilience, and thriving in high-pressure situations.",
     specialties: ["Mental Toughness", "Performance Optimization", "Pressure Management"],
-    avatar: "/avatars/marcus-johnson.png",
+    avatar: "/avatars/marcus-johnson.webp",
     style: "Energetic, results-driven, focuses on mindset and execution"
   },
   {
@@ -116,7 +116,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Strategic Growth Advisor",
     description: "Former startup CEO and venture advisor who helps leaders scale organizations, build effective teams, and navigate rapid growth challenges.",
     specialties: ["Scaling Organizations", "Startup Leadership", "Strategic Growth"],
-    avatar: "/avatars/david-chen.png",
+    avatar: "/avatars/david-chen.webp",
     style: "Pragmatic, entrepreneurial, focused on execution and results"
   },
   {
@@ -126,7 +126,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Executive Communication Coach",
     description: "Specializes in helping leaders communicate with clarity, influence stakeholders, and deliver compelling presentations in high-stakes situations.",
     specialties: ["Executive Communication", "Stakeholder Management", "Presentations"],
-    avatar: "/avatars/james-anderson.png",
+    avatar: "/avatars/james-anderson.webp",
     style: "Articulate, strategic, focuses on message clarity and impact"
   },
   {
@@ -136,7 +136,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Conflict Resolution Expert",
     description: "Former mediator and organizational psychologist who helps leaders navigate difficult conversations, resolve conflicts, and build trust.",
     specialties: ["Difficult Conversations", "Conflict Resolution", "Trust Building"],
-    avatar: "/avatars/alex-rivera.png",
+    avatar: "/avatars/alex-rivera.webp",
     style: "Diplomatic, insightful, helps find win-win solutions"
   },
   {
@@ -146,7 +146,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Leadership Development Specialist",
     description: "Focuses on helping leaders develop their teams, build leadership pipelines, and create cultures of continuous learning and development.",
     specialties: ["Leadership Development", "Talent Management", "Succession Planning"],
-    avatar: "/avatars/michael-thompson.png",
+    avatar: "/avatars/michael-thompson.webp",
     style: "Developmental, patient, focuses on long-term growth"
   },
   {
@@ -156,7 +156,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Operational Excellence Coach",
     description: "Former COO who helps leaders optimize operations, improve efficiency, and build systems that scale. Brings lean and agile methodologies to leadership.",
     specialties: ["Operational Excellence", "Process Optimization", "Systems Thinking"],
-    avatar: "/avatars/samuel-park.png",
+    avatar: "/avatars/samuel-park.webp",
     style: "Systematic, data-driven, focused on measurable improvement"
   },
   {
@@ -166,7 +166,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Board Relations Advisor",
     description: "Former board member and CFO who helps leaders navigate board dynamics, manage investor relations, and communicate effectively with stakeholders.",
     specialties: ["Board Management", "Investor Relations", "Financial Leadership"],
-    avatar: "/avatars/daniel-foster.png",
+    avatar: "/avatars/daniel-foster.webp",
     style: "Strategic, politically savvy, focuses on stakeholder alignment"
   },
   {
@@ -176,7 +176,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Turnaround Leadership Coach",
     description: "Specializes in helping leaders navigate organizational turnarounds, manage layoffs, and rebuild team morale during difficult transitions.",
     specialties: ["Turnaround Management", "Change Leadership", "Team Recovery"],
-    avatar: "/avatars/christopher-hayes.png",
+    avatar: "/avatars/christopher-hayes.webp",
     style: "Honest, resilient, focuses on rebuilding trust and momentum"
   },
 
@@ -188,7 +188,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Adaptive Leadership Coach",
     description: "Helps leaders develop flexibility, navigate ambiguity, and adapt their leadership style to different contexts and challenges.",
     specialties: ["Adaptive Leadership", "Situational Awareness", "Flexibility"],
-    avatar: "/avatars/jordan-taylor.png",
+    avatar: "/avatars/jordan-taylor.webp",
     style: "Flexible, context-aware, helps leaders read situations"
   },
   {
@@ -198,7 +198,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Remote Leadership Specialist",
     description: "Expert in helping leaders build and manage distributed teams, create virtual cultures, and lead effectively in hybrid work environments.",
     specialties: ["Remote Leadership", "Virtual Teams", "Hybrid Work"],
-    avatar: "/avatars/alex-morgan.png",
+    avatar: "/avatars/alex-morgan.webp",
     style: "Tech-savvy, inclusive, focused on connection and culture"
   },
   {
@@ -208,7 +208,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Emotional Intelligence Coach",
     description: "Specializes in helping leaders develop self-awareness, manage emotions, and build stronger relationships through emotional intelligence.",
     specialties: ["Emotional Intelligence", "Self-Awareness", "Relationship Building"],
-    avatar: "/avatars/casey-rivers.png",
+    avatar: "/avatars/casey-rivers.webp",
     style: "Reflective, compassionate, focuses on inner work"
   },
   {
@@ -218,7 +218,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Product Leadership Coach",
     description: "Former product executive who helps leaders build product organizations, make strategic product decisions, and balance user needs with business goals.",
     specialties: ["Product Strategy", "Product Leadership", "User-Centric Thinking"],
-    avatar: "/avatars/riley-parker.png",
+    avatar: "/avatars/riley-parker.webp",
     style: "User-focused, analytical, balances empathy with strategy"
   },
   {
@@ -228,7 +228,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Creative Leadership Coach",
     description: "Helps leaders in creative industries balance artistic vision with business realities, manage creative teams, and foster innovation.",
     specialties: ["Creative Leadership", "Innovation", "Vision Setting"],
-    avatar: "/avatars/quinn-anderson.png",
+    avatar: "/avatars/quinn-anderson.webp",
     style: "Visionary, inspiring, bridges creativity and business"
   },
   {
@@ -238,7 +238,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Mindful Leadership Coach",
     description: "Integrates mindfulness and contemplative practices into leadership development. Helps leaders find clarity, reduce reactivity, and lead with intention.",
     specialties: ["Mindful Leadership", "Presence", "Intentional Action"],
-    avatar: "/avatars/sage-mitchell.png",
+    avatar: "/avatars/sage-mitchell.webp",
     style: "Contemplative, grounded, focuses on presence and awareness"
   },
   {
@@ -248,7 +248,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Sales Leadership Coach",
     description: "Former VP of Sales who helps leaders build high-performing sales teams, develop sales strategies, and coach sales managers to excellence.",
     specialties: ["Sales Leadership", "Revenue Growth", "Sales Coaching"],
-    avatar: "/avatars/avery-brooks.png",
+    avatar: "/avatars/avery-brooks.webp",
     style: "Results-oriented, motivational, focuses on performance"
   },
   {
@@ -258,7 +258,7 @@ export const COACH_PROFILES: CoachProfile[] = [
     title: "Engineering Leadership Coach",
     description: "Former CTO who helps technical leaders transition to leadership, build engineering cultures, and balance technical excellence with people management.",
     specialties: ["Engineering Leadership", "Technical Leadership", "Team Building"],
-    avatar: "/avatars/cameron-wells.png",
+    avatar: "/avatars/cameron-wells.webp",
     style: "Technical, pragmatic, understands engineer mindset"
   },
 ];

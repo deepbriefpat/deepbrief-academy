@@ -1,5 +1,5 @@
 /**
- * Voice transcription helper using OpenAI Whisper API
+ * Voice transcription helper using internal Speech-to-Text service
  *
  * Frontend implementation guide:
  * 1. Capture audio using MediaRecorder API
@@ -25,7 +25,6 @@
  * });
  * ```
  */
-
 import { ENV } from "./env";
 
 export type TranscribeOptions = {
@@ -66,7 +65,7 @@ export type TranscriptionError = {
 };
 
 /**
- * Transcribe audio to text using OpenAI Whisper API
+ * Transcribe audio to text using the internal Speech-to-Text service
  * 
  * @param options - Audio data and metadata
  * @returns Transcription result or error
@@ -76,11 +75,18 @@ export async function transcribeAudio(
 ): Promise<TranscriptionResponse | TranscriptionError> {
   try {
     // Step 1: Validate environment configuration
-    if (!ENV.openaiApiKey) {
+    if (!ENV.forgeApiUrl) {
       return {
         error: "Voice transcription service is not configured",
         code: "SERVICE_ERROR",
-        details: "OPENAI_API_KEY is not set"
+        details: "BUILT_IN_FORGE_API_URL is not set"
+      };
+    }
+    if (!ENV.forgeApiKey) {
+      return {
+        error: "Voice transcription service authentication is missing",
+        code: "SERVICE_ERROR",
+        details: "BUILT_IN_FORGE_API_KEY is not set"
       };
     }
 
@@ -100,13 +106,13 @@ export async function transcribeAudio(
       audioBuffer = Buffer.from(await response.arrayBuffer());
       mimeType = response.headers.get('content-type') || 'audio/mpeg';
       
-      // Check file size (25MB limit for OpenAI)
+      // Check file size (16MB limit)
       const sizeMB = audioBuffer.length / (1024 * 1024);
-      if (sizeMB > 25) {
+      if (sizeMB > 16) {
         return {
           error: "Audio file exceeds maximum size limit",
           code: "FILE_TOO_LARGE",
-          details: `File size is ${sizeMB.toFixed(2)}MB, maximum allowed is 25MB`
+          details: `File size is ${sizeMB.toFixed(2)}MB, maximum allowed is 16MB`
         };
       }
     } catch (error) {
@@ -136,11 +142,21 @@ export async function transcribeAudio(
     );
     formData.append("prompt", prompt);
 
-    // Step 4: Call OpenAI Whisper API directly
-    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    // Step 4: Call the transcription service
+    const baseUrl = ENV.forgeApiUrl.endsWith("/")
+      ? ENV.forgeApiUrl
+      : `${ENV.forgeApiUrl}/`;
+    
+    const fullUrl = new URL(
+      "v1/audio/transcriptions",
+      baseUrl
+    ).toString();
+
+    const response = await fetch(fullUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${ENV.openaiApiKey}`,
+        authorization: `Bearer ${ENV.forgeApiKey}`,
+        "Accept-Encoding": "identity",
       },
       body: formData,
     });

@@ -59,13 +59,16 @@ import TermsOfService from "./pages/TermsOfService";
 import HowToUseThis from "./pages/HowToUseThis";
 import CoachSelectionGuide from "./pages/CoachSelectionGuide";
 import { TestEmail } from "./pages/TestEmail";
+import AuthCallback from "./pages/AuthCallback";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Layout>
       <Switch>
-        <Route path={"/"} component={Home} />      <Route path={"/dashboard"} component={Dashboard} />
+        <Route path={"/"} component={Home} />
+        <Route path={"/auth/callback"} component={AuthCallback} />
+        <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/test-email"} component={TestEmail} />
       <Route path={"/profile"} component={Profile} />
       <Route path="/subscription/success" component={SubscriptionSuccess} />

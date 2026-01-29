@@ -506,12 +506,6 @@ export const guestPassSessions = mysqlTable("guest_pass_sessions", {
   id: int("id").autoincrement().primaryKey(),
   guestPassId: int("guest_pass_id").references(() => guestPasses.id).notNull(),
   fingerprint: varchar("fingerprint", { length: 255 }).notNull(), // Browser fingerprint
-  // Guest user registration info (collected on first access)
-  guestName: varchar("guest_name", { length: 255 }),
-  guestEmail: varchar("guest_email", { length: 320 }),
-  guestCompany: varchar("guest_company", { length: 255 }),
-  guestRole: varchar("guest_role", { length: 255 }),
-  hasRegistered: boolean("has_registered").default(false).notNull(),
   messages: text("messages"), // JSON array of conversation messages
   messageCount: int("message_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

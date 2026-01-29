@@ -1917,3 +1917,22 @@ All tests pass, verifying:
 - [x] Add contextual help icons with popovers
 - [ ] Add "What to Expect" section on resume page
 - [ ] Improve mobile text input prominence
+
+## Mobile Voice Input Demo (User Requested - Jan 28)
+
+### Animation & Visual Design
+- [x] Create voice input demo animation/illustration
+- [x] Design sound wave visualization for active listening
+- [x] Add clear start/stop interaction instructions
+- [x] Create mobile-optimized demo modal
+
+### Implementation
+- [x] Build VoiceInputDemo component
+- [x] Add demo trigger on first mobile session
+- [ ] Impl- [x] Add "Show me how" button in chat interfa- [x] Add demo dismissal and "don't show again" option- [x] Store demo completion in localStorage
+
+### Integration
+- [x] Integrate demo into mobile onboarding flow
+- [x] Add demo link in mobile chat interface
+- [ ] Test on various mobile screen sizes
+- [ ] Verify voice input works after demo

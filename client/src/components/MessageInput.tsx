@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, Loader2, Send } from "lucide-react";
+import { Mic, MicOff, Loader2, Send, HelpCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { VoiceInputDemo } from "./VoiceInputDemo";
 
 interface MessageInputProps {
   value: string;
@@ -16,6 +17,8 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder }:
   const [isInitializing, setIsInitializing] = useState(false); // Loading state for mic initialization
   const [audioLevels, setAudioLevels] = useState<number[]>(Array(80).fill(0)); // 80 bars for full width
   const [showVoiceTip, setShowVoiceTip] = useState(false);
+  const [showVoiceDemo, setShowVoiceDemo] = useState(false);
+  const [hasSeenDemo, setHasSeenDemo] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -23,6 +26,20 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder }:
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const isRecordingRef = useRef(false); // Track recording state for animation loop
+
+  // Check if user has seen voice demo on mobile
+  useEffect(() => {
+    const seen = localStorage.getItem("voiceDemoSeen");
+    setHasSeenDemo(!!seen);
+    
+    // Auto-show demo on first mobile visit
+    if (!seen && window.innerWidth < 768) {
+      const timer = setTimeout(() => {
+        setShowVoiceDemo(true);
+      }, 2000); // Show after 2 seconds
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const transcribeMutation = trpc.aiCoach.transcribeAudio.useMutation({
     onSuccess: (result) => {
@@ -273,6 +290,17 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder }:
             <Mic className="w-6 h-6 lg:w-5 lg:h-5" />
           )}
         </button>
+        
+        {/* Voice Demo Help Button - only on mobile if not seen */}
+        {!hasSeenDemo && window.innerWidth < 768 && (
+          <button
+            onClick={() => setShowVoiceDemo(true)}
+            className="absolute -top-10 right-0 text-xs text-[#4A6741] hover:text-[#3d5636] flex items-center gap-1 bg-[#F2F0E9] px-2 py-1 rounded-lg shadow-sm"
+          >
+            <HelpCircle className="w-3 h-3" />
+            How to use voice
+          </button>
+        )}
       </div>
       
       <button
@@ -282,6 +310,17 @@ export function MessageInput({ value, onChange, onSend, disabled, placeholder }:
       >
         <Send className="h-4 w-4 sm:h-5 sm:w-5" />
       </button>
+      
+      {/* Voice Input Demo Modal */}
+      {showVoiceDemo && (
+        <VoiceInputDemo
+          onClose={() => setShowVoiceDemo(false)}
+          onComplete={() => {
+            setHasSeenDemo(true);
+            setShowVoiceDemo(false);
+          }}
+        />
+      )}
     </div>
   );
 }

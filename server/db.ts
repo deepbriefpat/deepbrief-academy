@@ -96,22 +96,6 @@ export async function getUserAssessments(userId: number) {
   return results;
 }
 
-export async function updateUserRole(openId: string, role: "user" | "admin"): Promise<void> {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot update user role: database not available");
-    return;
-  }
-
-  try {
-    await db.update(users).set({ role }).where(eq(users.openId, openId));
-    console.log(`[Database] Updated user ${openId} role to ${role}`);
-  } catch (error) {
-    console.error("[Database] Failed to update user role:", error);
-    throw error;
-  }
-}
-
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
   if (!db) {

@@ -10,4 +10,13 @@ export const ENV = {
   stripeSecretKey: process.env.STRIPE_SECRET_KEY ?? "",
   stripePriceId: process.env.STRIPE_PRICE_ID ?? "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? "",
+  // Google OAuth
+  googleClientId: process.env.GOOGLE_CLIENT_ID ?? "",
+  googleClientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+  appUrl: process.env.APP_URL ?? process.env.VITE_APP_URL ?? "http://localhost:3000",
+  // Admin email (this email will automatically get admin role)
+  adminEmail: process.env.ADMIN_EMAIL ?? "",
+  // OpenAI
+  openaiApiKey: process.env.OPENAI_API_KEY ?? "",
+  openaiModel: process.env.OPENAI_MODEL ?? "gpt-4o",
 };

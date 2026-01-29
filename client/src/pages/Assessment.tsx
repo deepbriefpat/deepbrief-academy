@@ -160,13 +160,23 @@ export default function Assessment() {
       handleSubmit();
     } else {
       setCurrentSection(prev => prev + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // Scroll to top after state update
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 50);
     }
   };
 
   const handleBack = () => {
     setCurrentSection(prev => prev - 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll to top after state update
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 50);
   };
 
   const handleSubmit = async () => {

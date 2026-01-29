@@ -10,6 +10,7 @@
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.2.2",
     "@hookform/resolvers": "^3.3.4",
     "@mailchimp/mailchimp_marketing": "^3.0.80",
     "@mailchimp/mailchimp_transactional": "^1.1.2",

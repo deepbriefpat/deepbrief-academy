@@ -2646,35 +2646,67 @@ The Deep Brief Team`;
         mimeType: z.string(), // audio/webm, audio/mp3, etc.
       }))
       .mutation(async ({ input }) => {
-        const { transcribeAudio } = await import("./_core/voiceTranscription");
+        const { ENV } = await import("./_core/env");
+        
+        // Check for OpenAI API key
+        const openaiApiKey = ENV.openaiApiKey;
+        if (!openaiApiKey) {
+          throw new Error("Voice transcription is not configured. Please set OPENAI_API_KEY.");
+        }
         
         // Convert base64 to buffer
         const audioBuffer = Buffer.from(input.audioData, 'base64');
         
-        // Upload to storage first to get a URL
-        const { storagePut } = await import("./storage");
-        const timestamp = Date.now();
-        const fileKey = `voice-input/${timestamp}.webm`;
-        const { url: audioUrl } = await storagePut(
-          fileKey,
-          audioBuffer,
-          input.mimeType
-        );
-        
-        // Transcribe the audio
-        const result = await transcribeAudio({
-          audioUrl,
-          language: "en",
-        });
-        
-        // Check if transcription was successful
-        if ('error' in result) {
-          throw new Error(result.error);
+        // Check file size (25MB limit for OpenAI Whisper)
+        const sizeMB = audioBuffer.length / (1024 * 1024);
+        if (sizeMB > 25) {
+          throw new Error(`Audio file is too large (${sizeMB.toFixed(2)}MB). Maximum allowed is 25MB.`);
         }
         
+        // Determine file extension from mime type
+        const getExtension = (mimeType: string): string => {
+          const mimeToExt: Record<string, string> = {
+            'audio/webm': 'webm',
+            'audio/mp3': 'mp3',
+            'audio/mpeg': 'mp3',
+            'audio/wav': 'wav',
+            'audio/x-wav': 'wav',
+            'audio/ogg': 'ogg',
+            'audio/mp4': 'mp4',
+            'audio/m4a': 'm4a',
+          };
+          return mimeToExt[mimeType] || 'webm';
+        };
+        
+        // Create FormData for OpenAI Whisper API
+        const formData = new FormData();
+        const filename = `audio.${getExtension(input.mimeType)}`;
+        const audioBlob = new Blob([new Uint8Array(audioBuffer)], { type: input.mimeType });
+        formData.append("file", audioBlob, filename);
+        formData.append("model", "whisper-1");
+        formData.append("response_format", "verbose_json");
+        formData.append("prompt", "Transcribe the user's voice to text");
+        
+        // Call OpenAI Whisper API directly
+        const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${openaiApiKey}`,
+          },
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => "");
+          console.error("[transcribeAudio] OpenAI API error:", response.status, errorText);
+          throw new Error(`Transcription failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
         return {
-          text: result.text,
-          language: result.language,
+          text: result.text || "",
+          language: result.language || "en",
         };
       }),
 

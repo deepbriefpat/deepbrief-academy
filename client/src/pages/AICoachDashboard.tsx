@@ -1096,13 +1096,17 @@ export default function AICoachDashboard() {
                           sendEmail: true 
                         });
                         
-                        // Show summary modal with the result
-                        if (result.summary) {
-                          setSessionSummary(result.summary);
-                          setShowSummaryModal(true);
-                        } else {
-                          toast.success("Session complete! Summary saved.");
-                        }
+                        // Always show the summary modal
+                        const summaryToShow = result.summary || {
+                          userName: user?.name || 'User',
+                          sessionDate: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+                          keyThemes: ['Session completed successfully'],
+                          patrickObservation: 'Thank you for this coaching session. Review your conversation in Session History to reflect on the insights discussed.',
+                          nextSessionPrompt: 'Take some time to implement what we discussed before your next session.',
+                          commitments: []
+                        };
+                        setSessionSummary(summaryToShow);
+                        setShowSummaryModal(true);
                         
                         setCurrentSessionId(null);
                         setChatMessages([]);
@@ -1164,13 +1168,17 @@ export default function AICoachDashboard() {
                     sendEmail: true 
                   });
                   
-                  // Show summary modal
-                  if (result.summary) {
-                    setSessionSummary(result.summary);
-                    setShowSummaryModal(true);
-                  } else {
-                    toast.success("Session complete! Summary saved.");
-                  }
+                  // Always show the summary modal
+                  const summaryToShow = result.summary || {
+                    userName: user?.name || 'User',
+                    sessionDate: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+                    keyThemes: ['Session completed successfully'],
+                    patrickObservation: 'Thank you for this coaching session. Review your conversation in Session History to reflect on the insights discussed.',
+                    nextSessionPrompt: 'Take some time to implement what we discussed before your next session.',
+                    commitments: []
+                  };
+                  setSessionSummary(summaryToShow);
+                  setShowSummaryModal(true);
                   
                   setCurrentSessionId(null);
                   setChatMessages([]);

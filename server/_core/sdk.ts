@@ -5,7 +5,6 @@ import { parse as parseCookieHeader } from "cookie";
 import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
 import type { User } from "../../drizzle/schema";
-import * as db from "../db";
 import { ENV } from "./env";
 import type {
   ExchangeTokenRequest,
@@ -297,7 +296,10 @@ class SDKServer {
     console.log("[Auth] About to call getUserByOpenId with:", sessionUserId);
     let user: User | null = null;
     try {
-      user = await db.getUserByOpenId(sessionUserId);
+      // Use dynamic import to avoid bundling issues
+      const dbModule = await import("../db");
+      console.log("[Auth] db module keys:", Object.keys(dbModule));
+      user = await dbModule.getUserByOpenId(sessionUserId);
       console.log("[Auth] getUserByOpenId returned:", user ? `user id=${user.id}, email=${user.email}, role=${user.role}` : "null");
     } catch (dbError) {
       console.error("[Auth] getUserByOpenId threw error:", dbError);
@@ -308,12 +310,13 @@ class SDKServer {
     if (!user) {
       console.log("[Auth] User not found, attempting to create...");
       try {
-        await db.upsertUser({
+        const dbModule = await import("../db");
+        await dbModule.upsertUser({
           openId: sessionUserId,
           name: session.name || null,
           lastSignedIn: signedInAt,
         });
-        user = await db.getUserByOpenId(sessionUserId);
+        user = await dbModule.getUserByOpenId(sessionUserId);
         console.log("[Auth] After upsert, user:", user ? `id=${user.id}` : "still null");
       } catch (error) {
         console.error("[Auth] Failed to create user:", error);
@@ -328,7 +331,8 @@ class SDKServer {
 
     // Update last signed in
     try {
-      await db.upsertUser({
+      const dbModule = await import("../db");
+      await dbModule.upsertUser({
         openId: user.openId,
         lastSignedIn: signedInAt,
       });

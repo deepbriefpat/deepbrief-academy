@@ -59,19 +59,18 @@ export function CalendarExportButton({
   // If no date, show button that prompts user to set one
   if (!eventDate) {
     return (
-      <Button 
-        variant={variant} 
-        size={size} 
+      <button 
+        type="button"
         onClick={() => {
           if (onRequestSetDate) {
             onRequestSetDate();
           }
         }}
-        className="gap-2 bg-[#D4A853] hover:bg-[#c49743] border-[#D4A853] text-white font-semibold hover:border-[#c49743] transition-all shadow-sm hover:shadow-md"
+        className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4A853] hover:bg-[#c49743] border border-[#D4A853] text-white font-semibold rounded-md hover:border-[#c49743] transition-all shadow-sm hover:shadow-md text-sm"
       >
         <Calendar className="h-4 w-4" />
         <span>Set Date to Add to Calendar</span>
-      </Button>
+      </button>
     );
   }
 
@@ -108,15 +107,14 @@ export function CalendarExportButton({
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant={variant} 
-          size={size} 
-          className="gap-2 bg-[#4A6741] hover:bg-[#3d5636] border-[#4A6741] text-white font-semibold hover:border-[#3d5636] transition-all shadow-sm hover:shadow-md"
+        <button 
+          type="button"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#4A6741] hover:bg-[#3d5636] border border-[#4A6741] text-white font-semibold rounded-md hover:border-[#3d5636] transition-all shadow-sm hover:shadow-md text-sm"
         >
           <Calendar className="h-4 w-4" />
           <span>Add to Calendar</span>
           <ChevronDown className="h-3 w-3" />
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 bg-white">
         <DropdownMenuItem onClick={handleGoogleCalendar} className="cursor-pointer">

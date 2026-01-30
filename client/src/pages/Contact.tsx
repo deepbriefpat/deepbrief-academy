@@ -13,7 +13,7 @@ export default function Contact() {
           <div className="text-center mb-12">
             <div className="flex justify-center mb-8">
               <img 
-                src="/Patrickheadshot.png" 
+                src="/Patrickheadshot.webp" 
                 alt="Patrick Voorma" 
                 className="rounded-full w-32 h-32 object-cover shadow-xl"
               />

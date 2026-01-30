@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { X, Check, Star } from "lucide-react";
+import { X, Check, Star, MessageSquare, Award, Users } from "lucide-react";
 import { COACH_PROFILES } from "@/data/coachProfiles";
 import { trpc } from "@/lib/trpc";
 
@@ -70,10 +70,11 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto bg-white">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-[#2C2C2C]" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <DialogTitle className="text-2xl font-bold text-[#2C2C2C] flex items-center gap-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <Users className="w-6 h-6 text-[#4A6741]" />
             Compare Coaches
           </DialogTitle>
-          <p className="text-sm text-[#0a1628] mt-2">
+          <p className="text-sm text-[#6B6B60] mt-2">
             Select 2-3 coaches to compare their specialties, styles, and your history with them
           </p>
         </DialogHeader>
@@ -81,66 +82,103 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
         {/* Coach Selection Grid */}
         {selectedCoaches.length < 3 && (
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-[#0a1628] mb-3">
-              Select coaches to compare ({selectedCoaches.length}/3)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto p-1">
-              {COACH_PROFILES.map((coach) => (
-                <button
-                  key={coach.id}
-                  onClick={() => toggleCoach(coach.id)}
-                  disabled={selectedCoaches.length >= 3 && !selectedCoaches.includes(coach.id)}
-                  className={`p-4 rounded-lg border-2 transition-all text-left ${
-                    selectedCoaches.includes(coach.id)
-                      ? "border-[#4A6741] bg-[#4A6741]/10 shadow-md"
-                      : "border-gray-200 hover:border-[#4A6741]/50 hover:shadow-sm"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-[#2C2C2C]">
+                Select coaches to compare ({selectedCoaches.length}/3)
+              </h3>
+              {selectedCoaches.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedCoaches([])}
+                  className="text-xs text-[#6B6B60] hover:text-[#2C2C2C]"
                 >
-                  <div className="flex items-start gap-3">
-                    <img
-                      src={coach.avatar}
-                      alt={coach.name}
-                      className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-gray-100"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-[#0a1628]">{coach.name}</p>
-                        {selectedCoaches.includes(coach.id) && (
-                          <Check className="w-5 h-5 text-[#4A6741] flex-shrink-0" />
+                  Clear selection
+                </Button>
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto p-1">
+              {COACH_PROFILES.map((coach) => {
+                const isSelected = selectedCoaches.includes(coach.id);
+                const isDisabled = selectedCoaches.length >= 3 && !isSelected;
+                
+                return (
+                  <button
+                    key={coach.id}
+                    onClick={() => toggleCoach(coach.id)}
+                    disabled={isDisabled}
+                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                      isSelected
+                        ? "border-[#4A6741] bg-[#4A6741]/10 shadow-md"
+                        : "border-[#E6E2D6] hover:border-[#4A6741]/50 hover:shadow-sm bg-white"
+                    } disabled:opacity-40 disabled:cursor-not-allowed`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`relative flex-shrink-0 ${isSelected ? "ring-2 ring-[#4A6741] ring-offset-2" : ""} rounded-full`}>
+                        <img
+                          src={coach.avatar}
+                          alt={coach.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-white"
+                        />
+                        {isSelected && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#4A6741] rounded-full flex items-center justify-center">
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
                         )}
                       </div>
-                      <p className="text-xs text-[#6B6B60] mt-0.5">{coach.title}</p>
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {coach.specialties.slice(0, 2).map((specialty, idx) => (
-                          <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 bg-white border-gray-200">
-                            {specialty}
-                          </Badge>
-                        ))}
-                        {coach.specialties.length > 2 && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white border-gray-200">
-                            +{coach.specialties.length - 2}
-                          </Badge>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-[#2C2C2C]">{coach.name}</p>
+                        <p className="text-xs text-[#6B6B60] mb-2">{coach.title}</p>
+                        
+                        {/* Key specialties */}
+                        <div className="flex flex-wrap gap-1">
+                          {coach.specialties.slice(0, 2).map((specialty, idx) => (
+                            <Badge 
+                              key={idx} 
+                              variant="outline" 
+                              className="text-[10px] px-1.5 py-0 bg-[#4A6741]/5 border-[#4A6741]/20 text-[#4A6741] font-medium"
+                            >
+                              {specialty}
+                            </Badge>
+                          ))}
+                          {coach.specialties.length > 2 && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-[10px] px-1.5 py-0 bg-[#E6E2D6] border-[#E6E2D6] text-[#6B6B60]"
+                            >
+                              +{coach.specialties.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                        
+                        {/* Session count if any */}
+                        {sessionCountByCoach[coach.id] > 0 && (
+                          <div className="flex items-center gap-1 mt-2 text-xs text-[#D4A853]">
+                            <MessageSquare className="w-3 h-3" />
+                            <span className="font-medium">{sessionCountByCoach[coach.id]} sessions</span>
+                          </div>
                         )}
                       </div>
                     </div>
-                  </div>
-                  {isRecommended(coach.id) && (
-                    <Badge variant="secondary" className="text-xs mt-2 bg-amber-50 text-amber-700 border-amber-200">
-                      <Star className="w-3 h-3 mr-1 fill-amber-500" />
-                      Recommended
-                    </Badge>
-                  )}
-                </button>
-              ))}
+                    
+                    {isRecommended(coach.id) && (
+                      <div className="mt-2 flex items-center gap-1 text-xs text-[#D4A853] font-semibold">
+                        <Star className="w-3 h-3 fill-[#D4A853]" />
+                        Recommended for you
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Guidance when 1 coach selected */}
         {selectedCoaches.length === 1 && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
-            <p className="text-amber-800 font-medium">
-              Select at least one more coach to start comparing
+          <div className="bg-[#D4A853]/10 border border-[#D4A853]/30 rounded-xl p-4 text-center mb-4">
+            <p className="text-[#9a7a2e] font-semibold">
+              👆 Select at least one more coach to start comparing
             </p>
           </div>
         )}
@@ -149,52 +187,64 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
         {compareCoaches.length >= 2 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-[#0a1628]">Comparing {compareCoaches.length} coaches</h3>
+              <h3 className="text-lg font-bold text-[#2C2C2C]">
+                Comparing {compareCoaches.length} coaches
+              </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedCoaches([])}
-                className="text-xs"
+                className="text-xs border-[#E6E2D6] hover:border-[#4A6741]"
               >
                 Clear all
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <div className={`grid gap-4 ${
+              compareCoaches.length === 2 ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-3"
+            }`}>
               {compareCoaches.map((coach) => (
-                <Card key={coach!.id} className="relative bg-white border-2 border-[#4A6741]/20 text-[#2C2C2C]">
+                <Card key={coach!.id} className="relative bg-white border-2 border-[#4A6741]/20 rounded-xl overflow-hidden">
+                  {/* Remove button */}
                   <button
                     onClick={() => toggleCoach(coach!.id)}
-                    className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    className="absolute top-3 right-3 p-1.5 hover:bg-[#F5F3EE] rounded-full transition-colors z-10"
                   >
-                    <X className="w-4 h-4 text-gray-500" />
+                    <X className="w-4 h-4 text-[#6B6B60]" />
                   </button>
 
                   <div className="p-6 space-y-4">
                     {/* Coach Header */}
-                    <div className="text-center">
-                      <img
-                        src={coach!.avatar}
-                        alt={coach!.name}
-                        className="w-20 h-20 rounded-full object-cover mx-auto mb-3 border-4 border-[#E6E2D6]"
-                      />
-                      <h3 className="text-lg font-bold text-[#0a1628]">{coach!.name}</h3>
-                      <p className="text-sm text-[#2C2C2C] font-medium mt-1">{coach!.title}</p>
-                      {isRecommended(coach!.id) && (
-                        <Badge variant="secondary" className="mt-2">
-                          <Star className="w-3 h-3 mr-1" />
-                          Recommended for you
-                        </Badge>
-                      )}
+                    <div className="text-center pb-4 border-b border-[#E6E2D6]">
+                      <div className="relative inline-block">
+                        <img
+                          src={coach!.avatar}
+                          alt={coach!.name}
+                          className="w-24 h-24 rounded-full object-cover mx-auto mb-3 border-4 border-[#4A6741]/20 shadow-lg"
+                        />
+                        {isRecommended(coach!.id) && (
+                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-[#D4A853] text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Star className="w-2.5 h-2.5 fill-white" />
+                            Recommended
+                          </div>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-bold text-[#2C2C2C]">{coach!.name}</h3>
+                      <p className="text-sm text-[#6B6B60] font-medium">{coach!.title}</p>
                     </div>
 
                     {/* Specialties */}
                     <div>
-                      <h4 className="text-xs font-bold text-[#0a1628] uppercase tracking-wide mb-2">
+                      <h4 className="text-xs font-bold text-[#4A6741] uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <Award className="w-3 h-3" />
                         Specialties
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-1.5">
                         {coach!.specialties.map((specialty, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs bg-white border-[#4A6741]/30 text-[#0a1628] font-medium whitespace-nowrap">
+                          <Badge 
+                            key={idx} 
+                            className="text-xs bg-[#4A6741]/10 text-[#4A6741] border-[#4A6741]/20 font-medium hover:bg-[#4A6741]/20"
+                          >
                             {specialty}
                           </Badge>
                         ))}
@@ -203,21 +253,22 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
 
                     {/* Coaching Style */}
                     <div>
-                      <h4 className="text-xs font-bold text-[#0a1628] uppercase tracking-wide mb-2">
+                      <h4 className="text-xs font-bold text-[#4A6741] uppercase tracking-wide mb-2 flex items-center gap-1">
+                        <MessageSquare className="w-3 h-3" />
                         Coaching Style
                       </h4>
-                      <p className="text-sm text-[#0a1628] leading-relaxed font-medium">
-                        {coach!.coachingStyle}
+                      <p className="text-sm text-[#2C2C2C] leading-relaxed bg-[#F5F3EE] rounded-lg p-3 italic">
+                        "{coach!.coachingStyle || coach!.style}"
                       </p>
                     </div>
 
                     {/* Your History */}
                     {sessionCountByCoach[coach!.id] > 0 && (
-                      <div>
-                        <h4 className="text-xs font-bold text-[#0a1628] uppercase tracking-wide mb-2">
+                      <div className="bg-[#D4A853]/10 rounded-lg p-3 border border-[#D4A853]/20">
+                        <h4 className="text-xs font-bold text-[#9a7a2e] uppercase tracking-wide mb-1">
                           Your History
                         </h4>
-                        <p className="text-sm text-[#0a1628] font-medium">
+                        <p className="text-sm text-[#2C2C2C] font-semibold">
                           {sessionCountByCoach[coach!.id]} session{sessionCountByCoach[coach!.id] !== 1 ? "s" : ""} completed
                         </p>
                       </div>
@@ -230,9 +281,10 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
                           onSelectCoach(coach!.id);
                           onClose();
                         }}
-                        className="w-full bg-[#4A6741] hover:bg-[#4A6741]/90 text-white text-sm px-3 py-2"
+                        className="w-full bg-[#4A6741] hover:bg-[#3d5636] text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all"
                       >
-                        Select
+                        <Check className="w-4 h-4 mr-2" />
+                        Select {coach!.name.split(' ')[0]}
                       </Button>
                     )}
                   </div>
@@ -242,15 +294,11 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
           </div>
         )}
 
-        {compareCoaches.length < 2 && selectedCoaches.length > 0 && (
-          <div className="text-center py-8 text-gray-500">
-            Select at least one more coach to start comparing
-          </div>
-        )}
-
+        {/* Empty state */}
         {selectedCoaches.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            Select 2-3 coaches above to compare them side-by-side
+          <div className="text-center py-8 bg-[#F5F3EE] rounded-xl border border-[#E6E2D6]">
+            <Users className="w-12 h-12 text-[#6B6B60] mx-auto mb-3" />
+            <p className="text-[#6B6B60] font-medium">Select 2-3 coaches above to compare them side-by-side</p>
           </div>
         )}
       </DialogContent>

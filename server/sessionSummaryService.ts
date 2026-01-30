@@ -82,7 +82,7 @@ Generate a session summary with:
 2. PATRICK'S OBSERVATION: One powerful, direct observation about what you noticed (1-2 sentences, in Patrick's voice - no corporate jargon, straight talk)
 3. NEXT SESSION PROMPT: What the user should think about before the next session (1-2 sentences, action-oriented)
 
-Return ONLY valid JSON in this exact format:
+IMPORTANT: Return ONLY valid JSON with no other text. No markdown, no explanation - just the JSON object:
 {
   "keyThemes": ["theme 1", "theme 2", "theme 3"],
   "patrickObservation": "Your observation here",
@@ -91,39 +91,27 @@ Return ONLY valid JSON in this exact format:
 
     const response = await invokeLLM({
       messages: [
-        { role: "system", content: "You are Patrick Voorma, an executive coach. Be direct, tactical, and authentic. No corporate jargon." },
+        { role: "system", content: "You are Patrick Voorma, an executive coach. Be direct, tactical, and authentic. No corporate jargon. Always respond with valid JSON only - no markdown code blocks, no explanations." },
         { role: "user", content: summaryPrompt }
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "session_summary",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              keyThemes: {
-                type: "array",
-                items: { type: "string" },
-                description: "2-4 main themes from the session"
-              },
-              patrickObservation: {
-                type: "string",
-                description: "One powerful observation in Patrick's voice"
-              },
-              nextSessionPrompt: {
-                type: "string",
-                description: "What to think about before next session"
-              }
-            },
-            required: ["keyThemes", "patrickObservation", "nextSessionPrompt"],
-            additionalProperties: false
-          }
-        }
-      }
+      ]
     });
 
-    const summaryData = JSON.parse(response.choices[0].message.content as string);
+    // Parse the response, handling potential markdown code blocks
+    let responseText = response.choices[0].message.content as string;
+    
+    // Remove markdown code blocks if present
+    responseText = responseText.trim();
+    if (responseText.startsWith("```json")) {
+      responseText = responseText.slice(7);
+    } else if (responseText.startsWith("```")) {
+      responseText = responseText.slice(3);
+    }
+    if (responseText.endsWith("```")) {
+      responseText = responseText.slice(0, -3);
+    }
+    responseText = responseText.trim();
+
+    const summaryData = JSON.parse(responseText);
 
     // Format commitments for email
     const commitments = sessionCommitments.map(c => ({

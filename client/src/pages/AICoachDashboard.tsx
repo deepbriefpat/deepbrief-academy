@@ -225,33 +225,36 @@ export default function AICoachDashboard() {
 
   useEffect(() => {
     // Skip profile check for guest mode - guests don't need a profile
-    if (!isGuestMode && !profile) {
+    // Also skip for admins who might not have a profile yet
+    if (!isGuestMode && !profile && user?.role !== "admin") {
       setLocation("/ai-coach/onboarding");
     }
-  }, [profile, isGuestMode, setLocation]);
+  }, [profile, isGuestMode, setLocation, user]);
 
   useEffect(() => {
     // Allow access if:
     // 1. Valid guest pass, OR
-    // 2. Active/trialing subscription
+    // 2. Active/trialing subscription, OR
+    // 3. Admin user (bypass subscription check)
     const hasValidGuestPass = isGuestMode && guestPassValidation?.valid;
     const hasValidSubscription = subscription && (subscription.status === "active" || subscription.status === "trialing");
+    const isAdmin = user?.role === "admin";
     
-    if (!hasValidGuestPass && !hasValidSubscription) {
+    if (!hasValidGuestPass && !hasValidSubscription && !isAdmin) {
       // If we're still loading guest pass validation, wait
       if (isGuestMode && guestPassCode && guestPassValidation === undefined) {
         return; // Still loading
       }
       setLocation("/ai-coach");
-    } else if (hasValidSubscription && !isGuestMode) {
+    } else if ((hasValidSubscription || isAdmin) && !isGuestMode) {
       // Track subscription started (only fires once per user)
       const hasTrackedSubscription = localStorage.getItem('aiCoachSubscriptionTracked');
-      if (!hasTrackedSubscription) {
+      if (!hasTrackedSubscription && hasValidSubscription) {
         trackSubscriptionStarted('dashboard');
         localStorage.setItem('aiCoachSubscriptionTracked', 'true');
       }
     }
-  }, [subscription, isGuestMode, guestPassCode, guestPassValidation, setLocation]);
+  }, [subscription, isGuestMode, guestPassCode, guestPassValidation, setLocation, user]);
 
   const handleStartSession = async () => {
     // For guests, just initialize the chat without creating a DB session
@@ -405,9 +408,11 @@ export default function AICoachDashboard() {
   };
 
   // Loading state - for subscribers need profile & subscription, for guests need valid pass
+  // Admins can bypass subscription requirement
+  const isAdmin = user?.role === "admin";
   const isLoading = isGuestMode 
     ? (guestPassCode && guestPassValidation === undefined) // Still validating guest pass
-    : (!profile || !subscription); // Still loading subscriber data
+    : (!profile || (!subscription && !isAdmin)); // Still loading subscriber data (admins can proceed without subscription)
     
   if (isLoading) {
     return (
@@ -647,7 +652,7 @@ export default function AICoachDashboard() {
                   {isGuestMode ? "Guest User" : ((user as any)?.preferredName || user?.name)}
                 </p>
                 <p className="text-xs text-[#6B6B60] truncate">
-                  {isGuestMode ? "Full Access Pass" : profile?.role}
+                  {isGuestMode ? "Full Access Pass" : (user?.role === "admin" ? "Admin" : profile?.role)}
                 </p>
               </div>
             </div>
@@ -665,6 +670,23 @@ export default function AICoachDashboard() {
                 </div>
                 <p className="text-xs text-[#6B6B60] mt-1">
                   Full access to all features
+                </p>
+              </div>
+            )}
+            
+            {/* Admin Status */}
+            {!isGuestMode && user?.role === "admin" && !subscription && (
+              <div className="mb-3 px-3 py-2 bg-[#4A6741]/10 rounded-lg border border-[#4A6741]/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-[#4A6741]">
+                    Admin Access
+                  </span>
+                  <span className="text-xs font-semibold text-green-600">
+                    Active
+                  </span>
+                </div>
+                <p className="text-xs text-[#6B6B60] mt-1">
+                  Full admin privileges
                 </p>
               </div>
             )}

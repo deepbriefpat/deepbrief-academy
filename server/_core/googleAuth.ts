@@ -6,28 +6,18 @@
 
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
-import { SignJWT } from "jose";
 import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { ENV } from "./env";
+import { sdk } from "./sdk";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-function getRedirectUri(req: Request): string {
-  // ALWAYS use APP_URL in production to avoid proxy issues
-  if (ENV.appUrl && ENV.appUrl !== "http://localhost:3000") {
-    const redirectUri = `${ENV.appUrl}/api/auth/google/callback`;
-    console.log("[GoogleAuth] Using APP_URL redirect_uri:", redirectUri);
-    return redirectUri;
-  }
-  
-  // Fallback for local development
-  const baseUrl = `${req.protocol}://${req.get("host")}`;
-  const redirectUri = `${baseUrl}/api/auth/google/callback`;
-  console.log("[GoogleAuth] Using request-based redirect_uri:", redirectUri);
-  return redirectUri;
+function getRedirectUri(): string {
+  // Always use APP_URL to avoid proxy issues
+  return `${ENV.appUrl}/api/auth/google/callback`;
 }
 
 export function registerGoogleAuthRoutes(app: Express) {
@@ -39,7 +29,7 @@ export function registerGoogleAuthRoutes(app: Express) {
   
   console.log("[GoogleAuth] Registering Google OAuth routes");
   console.log("[GoogleAuth] APP_URL from env:", ENV.appUrl);
-  console.log("[GoogleAuth] Expected redirect_uri:", `${ENV.appUrl}/api/auth/google/callback`);
+  console.log("[GoogleAuth] Expected redirect_uri:", getRedirectUri());
   
   // Initiate Google OAuth flow
   app.get("/api/auth/google", (req: Request, res: Response) => {
@@ -50,7 +40,7 @@ export function registerGoogleAuthRoutes(app: Express) {
       timestamp: Date.now(),
     })).toString("base64");
     
-    const redirectUri = getRedirectUri(req);
+    const redirectUri = getRedirectUri();
     
     const params = new URLSearchParams({
       client_id: ENV.googleClientId,
@@ -94,7 +84,7 @@ export function registerGoogleAuthRoutes(app: Express) {
         console.warn("[GoogleAuth] Could not parse state");
       }
       
-      const redirectUri = getRedirectUri(req);
+      const redirectUri = getRedirectUri();
       
       // Exchange code for tokens
       console.log("[GoogleAuth] Exchanging code for tokens...");
@@ -146,6 +136,7 @@ export function registerGoogleAuthRoutes(app: Express) {
       // Check if this user should be admin
       const isAdmin = ENV.adminEmail && userInfo.email.toLowerCase() === ENV.adminEmail.toLowerCase();
       
+      console.log("[GoogleAuth] Upserting user...");
       await db.upsertUser({
         openId,
         name: userInfo.name || null,
@@ -155,27 +146,13 @@ export function registerGoogleAuthRoutes(app: Express) {
         ...(isAdmin ? { role: "admin" as const } : {}),
       });
       
-      // Get the user from database to get their ID and role
-      const user = await db.getUserByOpenId(openId);
-      if (!user) {
-        console.error("[GoogleAuth] User not found after upsert");
-        return res.redirect("/?error=user_creation_failed");
-      }
-      
-      // Create session token using jose (same as SDK)
-      const secret = new TextEncoder().encode(ENV.cookieSecret || "default-secret-change-me");
-      const sessionToken = await new SignJWT({
-        openId,
-        appId: ENV.appId || "deepbrief-academy",
+      // Create session token using SDK (same as other auth methods)
+      console.log("[GoogleAuth] Creating session token...");
+      const sessionToken = await sdk.createSessionToken(openId, {
         name: userInfo.name || userInfo.email,
         email: userInfo.email,
-        userId: user.id,
-        role: user.role || "user",
-      })
-        .setProtectedHeader({ alg: "HS256" })
-        .setIssuedAt()
-        .setExpirationTime("1y")
-        .sign(secret);
+        expiresInMs: ONE_YEAR_MS,
+      });
       
       // Set session cookie
       const cookieOptions = getSessionCookieOptions(req);

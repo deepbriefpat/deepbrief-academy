@@ -407,7 +407,7 @@ export function FocusGoals({
 
                   {/* Goal Info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#2C2C2C] mb-1">{goal.title}</h4>
+                    <h4 className="font-semibold text-[#2C2C2C] mb-1">{goal.title || "Untitled Goal"}</h4>
                     {goal.description && (
                       <p className="text-sm text-[#6B6B60] line-clamp-2 mb-2">{goal.description}</p>
                     )}

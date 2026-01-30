@@ -35,37 +35,6 @@ export const appRouter = router({
       
       return ctx.user;
     }),
-    
-    // Google OAuth login
-    googleLogin: publicProcedure
-      .input(z.object({ idToken: z.string() }))
-      .mutation(async ({ input, ctx }) => {
-        const { sdk } = await import("./_core/sdk");
-        
-        try {
-          const { user, sessionToken } = await sdk.authenticateWithGoogle(input.idToken);
-          
-          // Set the session cookie
-          const cookieOptions = getSessionCookieOptions(ctx.req);
-          ctx.res.cookie(COOKIE_NAME, sessionToken, cookieOptions);
-          
-          return {
-            success: true,
-            user: {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-            },
-          };
-        } catch (error) {
-          console.error("[Auth] Google login failed:", error);
-          throw new TRPCError({
-            code: "UNAUTHORIZED",
-            message: "Google authentication failed",
-          });
-        }
-      }),
-    
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -1666,11 +1635,20 @@ Remember: They came to you because they're under pressure and need clarity. Give
     getSessions: protectedProcedure
       .input(z.object({ limit: z.number().optional() }))
       .query(async ({ ctx, input }) => {
-        const { getCoachingProfile, getCoachingSessions } = await import("./db");
-        const profile = await getCoachingProfile(ctx.user.id);
-        if (!profile) return [];
-        
-        return getCoachingSessions(profile.id, input.limit);
+        try {
+          console.log(`[getSessions] User ID: ${ctx.user.id}, limit: ${input.limit}`);
+          const { getCoachingProfile, getCoachingSessions } = await import("./db");
+          const profile = await getCoachingProfile(ctx.user.id);
+          console.log(`[getSessions] Profile found: ${profile ? profile.id : 'null'}`);
+          if (!profile) return [];
+          
+          const sessions = await getCoachingSessions(profile.id, input.limit);
+          console.log(`[getSessions] Found ${sessions?.length || 0} sessions`);
+          return sessions;
+        } catch (error) {
+          console.error(`[getSessions] Error:`, error);
+          throw error;
+        }
       }),
 
     // Get a specific session by ID
@@ -1904,11 +1882,20 @@ Remember: They came to you because they're under pressure and need clarity. Give
     // Get all goals
     getGoals: protectedProcedure
       .query(async ({ ctx }) => {
-        const { getCoachingProfile, getCoachingGoals } = await import("./db");
-        const profile = await getCoachingProfile(ctx.user.id);
-        if (!profile) return [];
-        
-        return getCoachingGoals(profile.id);
+        try {
+          console.log(`[getGoals] User ID: ${ctx.user.id}`);
+          const { getCoachingProfile, getCoachingGoals } = await import("./db");
+          const profile = await getCoachingProfile(ctx.user.id);
+          console.log(`[getGoals] Profile found: ${profile ? profile.id : 'null'}`);
+          if (!profile) return [];
+          
+          const goals = await getCoachingGoals(profile.id);
+          console.log(`[getGoals] Found ${goals?.length || 0} goals`);
+          return goals;
+        } catch (error) {
+          console.error(`[getGoals] Error:`, error);
+          throw error;
+        }
       }),
 
     // Update goal progress
@@ -2211,8 +2198,16 @@ Keep it conversational and forward-looking. Start with "Last time we discussed..
     // Get subscription status
     getSubscription: protectedProcedure
       .query(async ({ ctx }) => {
-        const { getCoachingSubscription } = await import("./db");
-        return getCoachingSubscription(ctx.user.id);
+        try {
+          console.log(`[getSubscription] User ID: ${ctx.user.id}`);
+          const { getCoachingSubscription } = await import("./db");
+          const subscription = await getCoachingSubscription(ctx.user.id);
+          console.log(`[getSubscription] Found: ${subscription ? 'yes' : 'null'}`);
+          return subscription;
+        } catch (error) {
+          console.error(`[getSubscription] Error:`, error);
+          throw error;
+        }
       }),
 
     // ========== Guest Pass System ==========
@@ -2595,63 +2590,42 @@ The Deep Brief Team`;
         return { coachId };
       }),
     
-    // Transcribe audio to text using OpenAI Whisper API
+    // Transcribe audio to text using voice transcription API
     transcribeAudio: protectedProcedure
       .input(z.object({
         audioData: z.string(), // Base64 encoded audio
         mimeType: z.string(), // audio/webm, audio/mp3, etc.
       }))
       .mutation(async ({ input }) => {
-        // Get OpenAI API key
-        const openaiApiKey = process.env.OPENAI_API_KEY;
-        if (!openaiApiKey) {
-          throw new Error("Voice transcription is not configured - OPENAI_API_KEY is missing");
-        }
+        const { transcribeAudio } = await import("./_core/voiceTranscription");
         
         // Convert base64 to buffer
         const audioBuffer = Buffer.from(input.audioData, 'base64');
         
-        // Check file size (25MB limit for OpenAI Whisper)
-        const sizeMB = audioBuffer.length / (1024 * 1024);
-        if (sizeMB > 25) {
-          throw new Error(`Audio file too large (${sizeMB.toFixed(2)}MB). Maximum is 25MB.`);
-        }
+        // Upload to storage first to get a URL
+        const { storagePut } = await import("./storage");
+        const timestamp = Date.now();
+        const fileKey = `voice-input/${timestamp}.webm`;
+        const { url: audioUrl } = await storagePut(
+          fileKey,
+          audioBuffer,
+          input.mimeType
+        );
         
-        // Create FormData for OpenAI Whisper API
-        const formData = new FormData();
-        const mimeToExt: Record<string, string> = {
-          'audio/webm': 'webm',
-          'audio/mp3': 'mp3',
-          'audio/mpeg': 'mp3',
-          'audio/wav': 'wav',
-          'audio/ogg': 'ogg',
-          'audio/m4a': 'm4a',
-        };
-        const ext = mimeToExt[input.mimeType] || 'webm';
-        const audioBlob = new Blob([audioBuffer], { type: input.mimeType });
-        formData.append("file", audioBlob, `audio.${ext}`);
-        formData.append("model", "whisper-1");
-        formData.append("response_format", "json");
-        
-        // Call OpenAI Whisper API
-        const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${openaiApiKey}`,
-          },
-          body: formData,
+        // Transcribe the audio
+        const result = await transcribeAudio({
+          audioUrl,
+          language: "en",
         });
-
-        if (!response.ok) {
-          const errorText = await response.text().catch(() => "");
-          throw new Error(`Transcription failed: ${response.status} ${response.statusText} - ${errorText}`);
+        
+        // Check if transcription was successful
+        if ('error' in result) {
+          throw new Error(result.error);
         }
-
-        const result = await response.json();
         
         return {
-          text: result.text || "",
-          language: result.language || "en",
+          text: result.text,
+          language: result.language,
         };
       }),
 

@@ -1142,11 +1142,19 @@ export default function AICoachDashboard() {
               onEndSession={async () => {
                 if (!currentSessionId) return;
                 try {
-                  await endSessionMutation.mutateAsync({ 
+                  const result = await endSessionMutation.mutateAsync({ 
                     sessionId: currentSessionId,
                     sendEmail: true 
                   });
-                  toast.success("Session complete! Summary emailed.");
+                  
+                  // Show summary modal
+                  if (result.summary) {
+                    setSessionSummary(result.summary);
+                    setShowSummaryModal(true);
+                  } else {
+                    toast.success("Session complete! Summary saved.");
+                  }
+                  
                   setCurrentSessionId(null);
                   setChatMessages([]);
                   setSessionNotes("");
@@ -1495,16 +1503,22 @@ export default function AICoachDashboard() {
       }}
     />
 
-   {/* Session Summary Modal - only show if summary has proper structure */}
-    {sessionSummary && typeof sessionSummary === 'object' && sessionSummary.keyThemes && (
-      <SessionSummaryModal
-        onClose={() => {
-          setShowSummaryModal(false);
-          setSessionSummary(null);
-        }}
-        summary={sessionSummary}
-      />
-    )}
+    {/* Session Summary Modal - FIXED: Added open prop */}
+    <SessionSummaryModal
+      open={showSummaryModal && sessionSummary && typeof sessionSummary === 'object' && !!sessionSummary.keyThemes}
+      onClose={() => {
+        setShowSummaryModal(false);
+        setSessionSummary(null);
+      }}
+      summary={sessionSummary || {
+        userName: user?.name || 'User',
+        sessionDate: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+        keyThemes: [],
+        patrickObservation: '',
+        nextSessionPrompt: '',
+        commitments: []
+      }}
+    />
     </>
   );
 }

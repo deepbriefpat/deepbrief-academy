@@ -1353,7 +1353,7 @@ export default function AICoachDashboard() {
                 if (session.summary) {
                   try {
                     const parsed = JSON.parse(session.summary);
-                    if (parsed.keyThemes && parsed.keyThemes.length > 0) {
+                    if (parsed && parsed.keyThemes && Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0) {
                       summaryText = parsed.keyThemes[0]; // Use first key theme as summary
                     }
                   } catch {
@@ -1361,13 +1361,29 @@ export default function AICoachDashboard() {
                     summaryText = session.summary;
                   }
                 }
+                
+                // Safely handle messages - could be string, array, or undefined
+                let messagesArray: Array<{ role: string; content: string }> = [];
+                if (session.messages) {
+                  if (Array.isArray(session.messages)) {
+                    messagesArray = session.messages;
+                  } else if (typeof session.messages === 'string') {
+                    try {
+                      const parsed = JSON.parse(session.messages);
+                      messagesArray = Array.isArray(parsed) ? parsed : [];
+                    } catch {
+                      messagesArray = [];
+                    }
+                  }
+                }
+                
                 return {
                   id: session.id,
                   startedAt: session.createdAt,
                   endedAt: session.endedAt,
-                  messageCount: session.messages?.length || 0,
+                  messageCount: messagesArray.length,
                   summary: summaryText,
-                  messages: session.messages || [],
+                  messages: messagesArray,
                 };
               })}
               expandLatest={expandLatestSession}
@@ -1383,8 +1399,20 @@ export default function AICoachDashboard() {
                     return;
                   }
                   
-                  // Safely extract messages with proper fallback
-                  const messages = Array.isArray(session.messages) ? session.messages : [];
+                  // Safely extract messages - could be string, array, or undefined
+                  let messages: Array<{ role: string; content: string }> = [];
+                  if (session.messages) {
+                    if (Array.isArray(session.messages)) {
+                      messages = session.messages;
+                    } else if (typeof session.messages === 'string') {
+                      try {
+                        const parsed = JSON.parse(session.messages);
+                        messages = Array.isArray(parsed) ? parsed : [];
+                      } catch {
+                        messages = [];
+                      }
+                    }
+                  }
                   const hasMessages = messages.length > 0;
                   
                   // CRITICAL: Switch to chat tab IMMEDIATELY before loading summary

@@ -414,11 +414,11 @@ export default function AICoachDashboard() {
   };
 
   // Loading state - for subscribers need profile & subscription, for guests need valid pass
-  // Admins can bypass subscription requirement
+  // Admins can bypass subscription AND profile requirements
   const isAdmin = user?.role === "admin";
   const isLoading = authLoading || (isGuestMode 
     ? (guestPassCode && guestPassValidation === undefined) // Still validating guest pass
-    : (!profile || (!subscription && !isAdmin))); // Still loading subscriber data (admins can proceed without subscription)
+    : ((!profile && !isAdmin) || (!subscription && !isAdmin))); // Admins can proceed without profile or subscription
     
   if (isLoading) {
     return (

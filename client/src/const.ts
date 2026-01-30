@@ -3,7 +3,7 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 // Google OAuth login URL
 export const getLoginUrl = () => {
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  const redirectUri = `${window.location.origin}/auth/callback`;
+  const redirectUri = `${window.location.origin}/api/auth/google/callback`;
   
   const url = new URL("https://accounts.google.com/o/oauth2/v2/auth");
   url.searchParams.set("client_id", googleClientId);

@@ -24,7 +24,7 @@ export default function About() {
             </div>
             <div className="relative">
               <img loading="lazy" 
-                src="/Patrickheadshot.png" 
+                src="/Patrickheadshot.webp" 
                 alt="Patrick Voorma" 
                 className="w-full rounded-lg shadow-2xl"
                
@@ -86,7 +86,7 @@ export default function About() {
             <div className="grid md:grid-cols-3 gap-6">
               <div className="relative group overflow-hidden rounded-lg">
                 <img loading="lazy" 
-                  src="/trimix130.jpg" 
+                  src="/trimix130.webp" 
                   alt="Technical diving at 130 meters" 
                   className="w-full h-64 object-cover transition-transform group-hover:scale-105"
                  
@@ -98,7 +98,7 @@ export default function About() {
 
               <div className="relative group overflow-hidden rounded-lg">
                 <img loading="lazy" 
-                  src="/istarwreck.jpg" 
+                  src="/istarwreck.webp" 
                   alt="Istar wreck discovery" 
                   className="w-full h-64 object-cover transition-transform group-hover:scale-105"
                  
@@ -110,7 +110,7 @@ export default function About() {
 
               <div className="relative group overflow-hidden rounded-lg">
                 <img loading="lazy" 
-                  src="/army.jpg" 
+                  src="/patrb.webp" 
                   alt="Military service" 
                   className="w-full h-64 object-cover transition-transform group-hover:scale-105"
                  
@@ -146,7 +146,7 @@ export default function About() {
 
               <div className="relative group overflow-hidden rounded-lg">
                 <img loading="lazy" 
-                  src="/rb.jpg" 
+                  src="/patrickradio.webp" 
                   alt="Rebreather diving" 
                   className="w-full h-64 object-cover transition-transform group-hover:scale-105"
                  

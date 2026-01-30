@@ -16,9 +16,18 @@ const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
 function getRedirectUri(req: Request): string {
-  // Use APP_URL env var or construct from request
-  const baseUrl = ENV.appUrl || `${req.protocol}://${req.get("host")}`;
-  return `${baseUrl}/api/auth/google/callback`;
+  // ALWAYS use APP_URL in production to avoid proxy issues
+  if (ENV.appUrl && ENV.appUrl !== "http://localhost:3000") {
+    const redirectUri = `${ENV.appUrl}/api/auth/google/callback`;
+    console.log("[GoogleAuth] Using APP_URL redirect_uri:", redirectUri);
+    return redirectUri;
+  }
+  
+  // Fallback for local development
+  const baseUrl = `${req.protocol}://${req.get("host")}`;
+  const redirectUri = `${baseUrl}/api/auth/google/callback`;
+  console.log("[GoogleAuth] Using request-based redirect_uri:", redirectUri);
+  return redirectUri;
 }
 
 export function registerGoogleAuthRoutes(app: Express) {
@@ -29,6 +38,8 @@ export function registerGoogleAuthRoutes(app: Express) {
   }
   
   console.log("[GoogleAuth] Registering Google OAuth routes");
+  console.log("[GoogleAuth] APP_URL from env:", ENV.appUrl);
+  console.log("[GoogleAuth] Expected redirect_uri:", `${ENV.appUrl}/api/auth/google/callback`);
   
   // Initiate Google OAuth flow
   app.get("/api/auth/google", (req: Request, res: Response) => {
@@ -52,7 +63,8 @@ export function registerGoogleAuthRoutes(app: Express) {
     });
     
     const authUrl = `${GOOGLE_AUTH_URL}?${params.toString()}`;
-    console.log("[GoogleAuth] Redirecting to:", authUrl);
+    console.log("[GoogleAuth] Initiating OAuth flow");
+    console.log("[GoogleAuth] redirect_uri being sent:", redirectUri);
     res.redirect(authUrl);
   });
   
@@ -86,6 +98,8 @@ export function registerGoogleAuthRoutes(app: Express) {
       
       // Exchange code for tokens
       console.log("[GoogleAuth] Exchanging code for tokens...");
+      console.log("[GoogleAuth] redirect_uri for token exchange:", redirectUri);
+      
       const tokenResponse = await fetch(GOOGLE_TOKEN_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },

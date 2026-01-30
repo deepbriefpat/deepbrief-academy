@@ -112,66 +112,66 @@ export default function CoachingAnalytics({ sessions = [], goals = [], commitmen
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        <Card className="p-6 bg-white border-[#E6E2D6]">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#4A6741]/10 rounded-lg">
-              <MessageCircle className="w-5 h-5 text-[#4A6741]" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <Card className="p-4 sm:p-6 bg-white border-[#E6E2D6]">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="p-1.5 sm:p-2 bg-[#4A6741]/10 rounded-lg flex-shrink-0">
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#4A6741]" />
             </div>
-            <span className="text-sm text-[#6B6B60]">Total Sessions</span>
+            <span className="text-xs sm:text-sm text-[#6B6B60] truncate">Total Sessions</span>
           </div>
-          <p className="text-3xl font-bold text-[#2C2C2C]">{sessions.length}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#2C2C2C]">{sessions.length}</p>
         </Card>
 
-        <Card className="p-6 bg-white border-[#E6E2D6]">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#D97757]/10 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-[#D97757]" />
+        <Card className="p-4 sm:p-6 bg-white border-[#E6E2D6]">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="p-1.5 sm:p-2 bg-[#D97757]/10 rounded-lg flex-shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-[#D97757]" />
             </div>
-            <span className="text-sm text-[#6B6B60]">Avg/Week</span>
+            <span className="text-xs sm:text-sm text-[#6B6B60] truncate">Avg/Week</span>
           </div>
-          <p className="text-3xl font-bold text-[#2C2C2C]">{avgSessionsPerWeek}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#2C2C2C]">{avgSessionsPerWeek}</p>
         </Card>
 
-        <Card className="p-6 bg-white border-[#E6E2D6]">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#4A6741]/10 rounded-lg">
-              <Target className="w-5 h-5 text-[#4A6741]" />
+        <Card className="p-4 sm:p-6 bg-white border-[#E6E2D6]">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="p-1.5 sm:p-2 bg-[#4A6741]/10 rounded-lg flex-shrink-0">
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#4A6741]" />
             </div>
-            <span className="text-sm text-[#6B6B60]">Goals</span>
+            <span className="text-xs sm:text-sm text-[#6B6B60] truncate">Goals</span>
           </div>
-          <p className="text-3xl font-bold text-[#2C2C2C]">{goals.length}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#2C2C2C]">{goals.length}</p>
         </Card>
 
-        <Card className="p-6 bg-white border-[#E6E2D6]">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#D97757]/10 rounded-lg">
-              <Calendar className="w-5 h-5 text-[#D97757]" />
+        <Card className="p-4 sm:p-6 bg-white border-[#E6E2D6]">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="p-1.5 sm:p-2 bg-[#D97757]/10 rounded-lg flex-shrink-0">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-[#D97757]" />
             </div>
-            <span className="text-sm text-[#6B6B60]">Goal Completion</span>
+            <span className="text-xs sm:text-sm text-[#6B6B60] truncate">Goal Done</span>
           </div>
-          <p className="text-3xl font-bold text-[#2C2C2C]">{goalStats.rate}%</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#2C2C2C]">{goalStats.rate}%</p>
         </Card>
 
-        <Card className="p-6 bg-white border-[#E6E2D6]">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#4A6741]/10 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-[#4A6741]" />
+        <Card className="p-4 sm:p-6 bg-white border-[#E6E2D6]">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="p-1.5 sm:p-2 bg-[#4A6741]/10 rounded-lg flex-shrink-0">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-[#4A6741]" />
             </div>
-            <span className="text-sm text-[#6B6B60]">Commitments</span>
+            <span className="text-xs sm:text-sm text-[#6B6B60] truncate">Commits</span>
           </div>
-          <p className="text-3xl font-bold text-[#2C2C2C]">{commitmentStats.total}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#2C2C2C]">{commitmentStats.total}</p>
           <p className="text-xs text-[#6B6B60] mt-1">{commitmentStats.open} open</p>
         </Card>
 
-        <Card className="p-6 bg-white border-[#E6E2D6]">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-[#D97757]/10 rounded-lg">
-              <Clock className="w-5 h-5 text-[#D97757]" />
+        <Card className="p-4 sm:p-6 bg-white border-[#E6E2D6]">
+          <div className="flex items-center gap-2 sm:gap-3 mb-2">
+            <div className="p-1.5 sm:p-2 bg-[#D97757]/10 rounded-lg flex-shrink-0">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#D97757]" />
             </div>
-            <span className="text-sm text-[#6B6B60]">Commitment Rate</span>
+            <span className="text-xs sm:text-sm text-[#6B6B60] truncate">Done Rate</span>
           </div>
-          <p className="text-3xl font-bold text-[#2C2C2C]">{commitmentStats.rate}%</p>
+          <p className="text-2xl sm:text-3xl font-bold text-[#2C2C2C]">{commitmentStats.rate}%</p>
           {commitmentStats.overdue > 0 && (
             <p className="text-xs text-red-600 mt-1">{commitmentStats.overdue} overdue</p>
           )}

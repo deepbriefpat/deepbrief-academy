@@ -1337,26 +1337,40 @@ For first messages in a new session:
         fileName: z.string(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { storagePut } = await import("./storage");
+        // Validate base64 data - should be a data URL
+        if (!input.imageData.startsWith('data:image/')) {
+          throw new Error('Invalid image data format');
+        }
         
-        // Convert base64 to buffer
-        const base64Data = input.imageData.replace(/^data:image\/\w+;base64,/, "");
-        const buffer = Buffer.from(base64Data, "base64");
+        // For now, we'll store the image as a data URL directly
+        // This avoids needing external storage for profile pictures
+        // In production, you'd want to use S3, Cloudinary, etc.
         
-        // Generate unique file key
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileExtension = input.fileName.split(".").pop() || "jpg";
-        const fileKey = `profile-pictures/${ctx.user.id}-${timestamp}-${randomSuffix}.${fileExtension}`;
+        // Optional: Compress or resize image here if needed
+        // For MVP, just return the data URL
         
-        // Upload to S3
-        const { url } = await storagePut(
-          fileKey,
-          buffer,
-          `image/${fileExtension}`
-        );
+        // Limit image size to avoid database bloat (approx 500KB in base64)
+        if (input.imageData.length > 700000) {
+          throw new Error('Image too large. Please use an image smaller than 500KB');
+        }
         
-        return { url };
+        // Store directly in user profile
+        const { getCoachingProfile, updateProfilePicture } = await import("./db");
+        const profile = await getCoachingProfile(ctx.user.id);
+        if (!profile) throw new Error("Coaching profile not found");
+        
+        // Update the profile with the data URL
+        const db = await import("./db").then(m => m.getDb());
+        if (!db) throw new Error("Database not available");
+        
+        const { coachingUsers } = await import("../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        
+        await db.update(coachingUsers)
+          .set({ profilePictureUrl: input.imageData })
+          .where(eq(coachingUsers.id, profile.id));
+        
+        return { url: input.imageData };
       }),
 
     // Start a coaching conversation
@@ -1431,6 +1445,41 @@ For first messages in a new session:
         const session = sessions[0];
         const messages = JSON.parse(session.messages as string);
         
+        // Get the selected coach personality
+        let coachPersonalityPrompt = "";
+        let coachName = "your AI Coach";
+        try {
+          const { users } = await import("../drizzle/schema");
+          const [userRecord] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+          const selectedCoachId = userRecord?.selectedCoach || "sarah-mitchell";
+          
+          const { COACH_PERSONALITIES } = await import("./coachPersonalities");
+          
+          // Flexible matching: try exact match first, then partial name match
+          let coachPersonality = COACH_PERSONALITIES.find(c => c.id === selectedCoachId);
+          
+          if (!coachPersonality) {
+            // Try matching by name parts (e.g., "sarah" matches "sarah-mitchell")
+            const searchName = selectedCoachId.toLowerCase().replace(/-/g, ' ');
+            coachPersonality = COACH_PERSONALITIES.find(c => 
+              c.name.toLowerCase().includes(searchName) || 
+              c.id.toLowerCase().includes(selectedCoachId.toLowerCase())
+            );
+          }
+          
+          if (!coachPersonality) {
+            // Fallback to first coach
+            coachPersonality = COACH_PERSONALITIES[0];
+          }
+          
+          if (coachPersonality) {
+            coachName = coachPersonality.name;
+            coachPersonalityPrompt = `\n\nYOUR PERSONALITY:\n${coachPersonality.promptModifier}\n\nSignature questions you might use:\n${coachPersonality.signatureQuestions.map(q => `- "${q}"`).join('\n')}\n\nAvoid these phrases: ${coachPersonality.avoidPhrases.join(', ')}`;
+          }
+        } catch (error) {
+          console.log("[sendMessage] Could not load coach personality, using default");
+        }
+        
         // PATTERN RECOGNITION: Get recent behavioral patterns to mention proactively
         let patternContext = "";
         try {
@@ -1475,7 +1524,7 @@ Adjust your coaching intensity accordingly — someone at Crush Depth needs diff
         }
         
         // Quick Coaching mode: tactical 3-minute responses for urgent pre-meeting pressure
-        const quickCoachingPrompt = `You are Patrick Voorma's AI tactical coach for urgent pre-meeting pressure moments. ${userName} needs a 3-minute tactical response RIGHT NOW.
+        const quickCoachingPrompt = `You are ${coachName}, an AI tactical coach for urgent pre-meeting pressure moments. ${userName} needs a 3-minute tactical response RIGHT NOW.
 
 WHO THEY ARE:
 - Role: ${profile.role} (${profile.experienceLevel})
@@ -1492,7 +1541,7 @@ FORMAT:
 Be direct. Be fast. Be useful. They're walking into something in the next hour and need clarity NOW.`;
 
         // Full Coaching mode: comprehensive C.A.L.M. Protocol coaching
-        const fullCoachingPrompt = `You are an AI executive coach built by Patrick Voorma — a former Army Captain, technical diver with 10,000+ dives to 150 metres depth, and leadership developer who has led teams across 52 countries. You embody his philosophy: pressure doesn't build character, it reveals it. Your job is to help ${userName} see clearly when pressure is distorting their thinking.
+        const fullCoachingPrompt = `You are ${coachName}, an AI executive coach. You embody the philosophy that pressure doesn't build character, it reveals it. Your job is to help ${userName} see clearly when pressure is distorting their thinking.
 
 WHO YOU'RE COACHING:
 - Role: ${profile.role} (${profile.experienceLevel} level)
@@ -1540,7 +1589,7 @@ WHAT YOU DON'T DO:
 - Don't re-introduce yourself or explain your role. Just coach.
 - Don't use corporate jargon. Speak like a human who's been in hard situations.
 
-Remember: They came to you because they're under pressure and need clarity. Give them that. Be the thinking partner who asks what no one else will ask.`;
+Remember: They came to you because they're under pressure and need clarity. Give them that. Be the thinking partner who asks what no one else will ask.${coachPersonalityPrompt}`;
         
         // Select system prompt based on session type
         const systemPrompt = input.sessionType === "quick" ? quickCoachingPrompt : fullCoachingPrompt;

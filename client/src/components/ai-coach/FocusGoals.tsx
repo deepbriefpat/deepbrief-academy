@@ -288,7 +288,7 @@ export function FocusGoals({
             </div>
 
             {/* Target Date & Calendar */}
-            <div className="space-y-2 mb-4">
+            <div className="space-y-3 mb-4">
               {focusGoal.targetDate && (
                 <div className="flex items-center gap-2 text-sm text-[#6B6B60]">
                   <Clock className="w-4 h-4" />
@@ -297,13 +297,15 @@ export function FocusGoals({
                   <span>Target: {new Date(focusGoal.targetDate).toLocaleDateString()}</span>
                 </div>
               )}
-              <CalendarExportButton
-                title={focusGoal.title}
-                description={focusGoal.description || ""}
-                startDate={focusGoal.targetDate ? new Date(focusGoal.targetDate) : undefined}
-                location="AI Executive Coach"
-                onRequestSetDate={() => setEditingGoal(focusGoal)}
-              />
+              <div className="pt-2">
+                <CalendarExportButton
+                  title={focusGoal.title}
+                  description={focusGoal.description || ""}
+                  startDate={focusGoal.targetDate ? new Date(focusGoal.targetDate) : undefined}
+                  location="AI Executive Coach"
+                  onRequestSetDate={() => setEditingGoal(focusGoal)}
+                />
+              </div>
             </div>
 
             {/* Milestones as Checklist */}
@@ -354,7 +356,7 @@ export function FocusGoals({
         </div>
       )}
 
-      {/* Other Goals - Minimal List */}
+      {/* Other Goals - Card List */}
       {otherGoals.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -369,82 +371,88 @@ export function FocusGoals({
               Add
             </Button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {otherGoals.map((goal) => (
               <div 
                 key={goal.id}
-                className="group flex items-center gap-4 p-4 bg-white rounded-xl border border-[#E6E2D6] hover:border-[#4A6741]/30 transition-all"
+                className="group p-4 bg-white rounded-xl border border-[#E6E2D6] hover:border-[#4A6741]/30 transition-all"
               >
-                {/* Progress Circle */}
-                <div className="relative w-10 h-10 flex-shrink-0">
-                  <svg className="w-10 h-10 -rotate-90">
-                    <circle
-                      cx="20"
-                      cy="20"
-                      r="16"
-                      fill="none"
-                      stroke="#F2F0E9"
-                      strokeWidth="3"
-                    />
-                    <circle
-                      cx="20"
-                      cy="20"
-                      r="16"
-                      fill="none"
-                      stroke="#4A6741"
-                      strokeWidth="3"
-                      strokeDasharray={`${(goal.progress || 0) * 1.005} 100`}
-                      className="transition-all"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-[#4A6741]">
-                    {goal.progress || 0}%
-                  </span>
-                </div>
+                <div className="flex items-start gap-4">
+                  {/* Progress Circle */}
+                  <div className="relative w-12 h-12 flex-shrink-0">
+                    <svg className="w-12 h-12 -rotate-90">
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        fill="none"
+                        stroke="#F2F0E9"
+                        strokeWidth="3"
+                      />
+                      <circle
+                        cx="24"
+                        cy="24"
+                        r="20"
+                        fill="none"
+                        stroke="#4A6741"
+                        strokeWidth="3"
+                        strokeDasharray={`${(goal.progress || 0) * 1.256} 125.6`}
+                        className="transition-all"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#4A6741]">
+                      {goal.progress || 0}%
+                    </span>
+                  </div>
 
-                {/* Goal Info */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-[#2C2C2C] truncate">{goal.title}</h4>
-                  {goal.targetDate && (
-                    <p className="text-xs text-[#6B6B60]">
-                      {getTimeRemaining(new Date(goal.targetDate))}
-                    </p>
-                  )}
-                </div>
+                  {/* Goal Info */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-[#2C2C2C] mb-1">{goal.title}</h4>
+                    {goal.description && (
+                      <p className="text-sm text-[#6B6B60] line-clamp-2 mb-2">{goal.description}</p>
+                    )}
+                    {goal.targetDate && (
+                      <div className="flex items-center gap-1 text-xs text-[#6B6B60]">
+                        <Clock className="w-3 h-3" />
+                        <span>{getTimeRemaining(new Date(goal.targetDate))}</span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleSetFocus(goal.id)}
-                    className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors"
-                    title="Set as focus"
-                  >
-                    <Star className="w-4 h-4 text-[#6B6B60]" />
-                  </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors">
-                        <MoreHorizontal className="w-4 h-4 text-[#6B6B60]" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleSetFocus(goal.id)}>
-                        <Star className="w-4 h-4 mr-2" />
-                        Set as focus
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setEditingGoal(goal)}>
-                        <Pencil className="w-4 h-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => onDeleteGoal(goal.id)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleSetFocus(goal.id)}
+                      className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors"
+                      title="Set as focus"
+                    >
+                      <Star className="w-4 h-4 text-[#D4A853]" />
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors">
+                          <MoreHorizontal className="w-4 h-4 text-[#6B6B60]" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-white">
+                        <DropdownMenuItem onClick={() => handleSetFocus(goal.id)}>
+                          <Star className="w-4 h-4 mr-2" />
+                          Set as focus
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditingGoal(goal)}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => onDeleteGoal(goal.id)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
               </div>
             ))}

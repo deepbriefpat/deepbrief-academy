@@ -694,19 +694,53 @@ export default function LeadershipPressureProfile() {
             {/* CTAs */}
             <div className="text-center pt-4">
               <h3 className="font-serif text-2xl font-semibold mb-4">What's Next?</h3>
-              <p className="text-text-secondary mb-6">Ready to build the peer support you need to think clearly at depth?</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+              <p className="text-text-secondary mb-8 max-w-lg mx-auto">
+                Your profile reveals where pressure is building. Now you have options.
+              </p>
+              
+              {/* Primary Options */}
+              <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-8">
+                {/* Free Demo Option */}
+                <div className="bg-white/5 border border-gold/30 rounded-xl p-6 text-left hover:border-gold/50 transition-all">
+                  <div className="text-sm uppercase tracking-wide text-gold mb-2">Free Trial</div>
+                  <h4 className="text-xl font-semibold mb-3">Try AI Coaching</h4>
+                  <p className="text-text-secondary text-sm mb-4">
+                    10 free coaching interactions. Experience the AI coach before committing. No card required.
+                  </p>
+                  <button
+                    onClick={() => setLocation("/ai-coach/demo")}
+                    className="w-full bg-gold text-navy-deep font-semibold py-3 rounded-lg hover:bg-gold-light transition-colors"
+                  >
+                    Start Free Demo
+                  </button>
+                </div>
+                
+                {/* Subscribe Option */}
+                <div className="bg-gradient-to-br from-gold/10 to-gold/5 border border-gold rounded-xl p-6 text-left">
+                  <div className="text-sm uppercase tracking-wide text-gold mb-2">Full Access</div>
+                  <h4 className="text-xl font-semibold mb-3">Subscribe to AI Coaching</h4>
+                  <p className="text-text-secondary text-sm mb-4">
+                    Unlimited coaching sessions, goal tracking, pattern insights, and more. £19.95/month.
+                  </p>
+                  <button
+                    onClick={() => setLocation("/ai-coach")}
+                    className="w-full bg-gold text-navy-deep font-semibold py-3 rounded-lg hover:bg-gold-light transition-colors"
+                  >
+                    Get Full Access
+                  </button>
+                </div>
+              </div>
+              
+              {/* Human Coaching Option */}
+              <div className="border-t border-white/10 pt-8">
+                <p className="text-sm text-text-secondary mb-4">
+                  Prefer working with a human? Book a call with Patrick.
+                </p>
                 <button
                   onClick={() => setLocation("/book-call")}
-                  className="bg-gradient-to-br from-gold to-gold-dim text-white font-semibold px-8 py-3 rounded-lg hover:shadow-[0_8px_30px_rgba(212,175,55,0.4)] hover:-translate-y-0.5 transition-all duration-300"
+                  className="bg-transparent border border-white/30 text-white font-medium px-6 py-2.5 rounded-lg hover:border-white hover:bg-white/5 transition-all"
                 >
-                  Book a Pressure Audit Call
-                </button>
-                <button
-                  onClick={() => setLocation("/clarity-under-pressure")}
-                  className="bg-transparent border-2 border-white/30 text-white font-medium px-8 py-3 rounded-lg hover:border-white hover:bg-white/10 transition-all duration-300"
-                >
-                  Join Depth Protocol
+                  Book a Call
                 </button>
               </div>
             </div>

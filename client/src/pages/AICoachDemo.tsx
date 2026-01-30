@@ -16,14 +16,19 @@ import { RatingModal } from "@/components/RatingModal";
 import { tacticalTemplates } from "@/data/tacticalTemplates";
 import { trackDemoStarted, trackDemoCompleted } from "@/lib/analytics";
 import { GuestCommitments } from "@/components/ai-coach/GuestCommitments";
+import { DemoIntro } from "@/components/DemoIntro";
 
 const STORAGE_KEY = "aiCoachDemoHistory";
 const INTERACTION_COUNT_KEY = "aiCoachDemoCount";
 const COACH_PREFS_KEY = "aiCoachPreferences";
+const DEMO_INTRO_SEEN_KEY = "aiCoachDemoIntroSeen";
+const USER_NAME_KEY = "aiCoachUserName";
 
 export default function AICoachDemo() {
   const [fingerprint, setFingerprint] = useState<string>("");
+  const [showDemoIntro, setShowDemoIntro] = useState(false);
   const [showCoachSetup, setShowCoachSetup] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const [coachPrefs, setCoachPrefs] = useState<CoachPreferences | null>(null);
   
   // Load from localStorage on mount
@@ -124,29 +129,49 @@ export default function AICoachDemo() {
     };
     initFingerprint();
 
-    // Check for existing coach preferences
+    // Check if user has seen the intro and has preferences
     try {
+      const introSeen = localStorage.getItem(DEMO_INTRO_SEEN_KEY);
       const savedPrefs = localStorage.getItem(COACH_PREFS_KEY);
+      const savedUserName = localStorage.getItem(USER_NAME_KEY);
+      
+      if (savedUserName) {
+        setUserName(savedUserName);
+      }
+      
       if (savedPrefs) {
+        // Returning user - has coach preferences
         setCoachPrefs(JSON.parse(savedPrefs));
-      } else {
-        // Show setup modal for new users
+      } else if (introSeen) {
+        // Saw intro but didn't complete coach setup - show coach setup
         setShowCoachSetup(true);
+      } else {
+        // Brand new user - show intro first
+        setShowDemoIntro(true);
       }
     } catch (e) {
-      setShowCoachSetup(true);
+      setShowDemoIntro(true);
     }
   }, []);
+
+  const handleDemoIntroComplete = (name: string) => {
+    setUserName(name);
+    localStorage.setItem(DEMO_INTRO_SEEN_KEY, "true");
+    localStorage.setItem(USER_NAME_KEY, name);
+    setShowDemoIntro(false);
+    setShowCoachSetup(true); // Now show coach selection
+  };
 
   const handleCoachSetupComplete = (preferences: CoachPreferences) => {
     setCoachPrefs(preferences);
     localStorage.setItem(COACH_PREFS_KEY, JSON.stringify(preferences));
     setShowCoachSetup(false);
     
-    // Update initial message with coach name
+    // Update initial message with coach name and user's name
+    const greeting = userName ? `Hello ${userName}. ` : "";
     const welcomeMessage = {
       role: "assistant" as const,
-      content: `I'm ${preferences.name}. You have **10 free coaching interactions** to see if this works for you.\n\nWhat's on your mind? Don't give me the polished version—I want the thing you're actually wrestling with.`
+      content: `${greeting}I'm ${preferences.name}. You have **10 free coaching interactions** to see if this works for you.\n\nWhat's on your mind? Don't give me the polished version—I want the thing you're actually wrestling with.`
     };
     
     setMessages([welcomeMessage]);
@@ -175,9 +200,10 @@ export default function AICoachDemo() {
 
   const clearHistory = () => {
     if (confirm("Are you sure you want to clear your conversation history? This cannot be undone.")) {
+      const greeting = userName ? `Hello ${userName}. ` : "";
       const welcomeMessage = {
         role: "assistant" as const,
-        content: `I'm ${coachPrefs?.name || "your AI Executive Coach"}. You have **10 free coaching interactions** to see if this works for you.\n\nWhat's on your mind? Don't give me the polished version—I want the thing you're actually wrestling with.`
+        content: `${greeting}I'm ${coachPrefs?.name || "your AI Executive Coach"}. You have **10 free coaching interactions** to see if this works for you.\n\nWhat's on your mind? Don't give me the polished version—I want the thing you're actually wrestling with.`
       };
       
       setMessages([welcomeMessage]);
@@ -252,6 +278,11 @@ export default function AICoachDemo() {
       setShowSubscribe(true);
     }
   };
+  
+  // Show DemoIntro for new users
+  if (showDemoIntro) {
+    return <DemoIntro onComplete={handleDemoIntroComplete} />;
+  }
   
   return (
     <>

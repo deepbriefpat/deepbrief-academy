@@ -187,39 +187,109 @@ export default function ClarityProgram() {
         </div>
       </section>
 
+      {/* AI Coaching Option - before Investment */}
+      <section className="py-20 bg-gradient-to-b from-navy-mid to-navy-deep">
+        <div className="container max-w-[1000px]">
+          <div className="border border-[#4A6741]/30 bg-[#4A6741]/5 rounded-xl p-8">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex-1">
+                <div className="text-sm uppercase tracking-wide text-[#4A6741] mb-3">Also Available</div>
+                <h3 className="text-2xl font-serif text-gold-light mb-4">AI Executive Coaching</h3>
+                <p className="text-text-secondary mb-4">
+                  Not ready for the full engagement? Try our AI coaching platform first. 
+                  The same coaching methodology, available 24/7.
+                </p>
+                <ul className="space-y-2 text-text-secondary text-sm mb-6">
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#4A6741]">✓</span>
+                    Unlimited coaching conversations
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#4A6741]">✓</span>
+                    Goal tracking and accountability
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#4A6741]">✓</span>
+                    Pattern recognition across sessions
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <span className="text-[#4A6741]">✓</span>
+                    £19.95/month with 3-day free trial
+                  </li>
+                </ul>
+                <div className="flex gap-4 flex-wrap">
+                  <Link href="/ai-coach/demo">
+                    <Button className="bg-[#4A6741] hover:bg-[#3d5636] text-white font-semibold px-6 py-3 rounded-lg transition-all">
+                      Try Free Demo
+                    </Button>
+                  </Link>
+                  <Link href="/ai-coach">
+                    <Button variant="outline" className="border-[#4A6741] text-[#4A6741] hover:bg-[#4A6741]/10 font-medium px-6 py-3 rounded-lg">
+                      Learn More
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Investment Section */}
       <section className="py-24 bg-navy-mid">
         <div className="container max-w-[1000px]">
           <h2 className="text-[clamp(2rem,4vw,2.8rem)] font-serif text-gold mb-6">The Investment</h2>
-          <p className="text-text-secondary mb-8">
+          <p className="text-text-secondary mb-10">
             This work prevents drift from becoming damage. That's what the investment protects.
           </p>
-          <div className="text-[5rem] font-serif text-gold leading-none mb-4">£3,000</div>
-          <p className="text-text-secondary mb-8">For the complete 3-month engagement</p>
           
-          <ul className="space-y-3 mb-12">
-            {[
-              "Serious enough to ensure you show up",
-              "Accessible without board approval",
-              "Room to go deeper if you need it"
-            ].map((item, i) => (
-              <li key={i} className="text-text-secondary pl-5 relative">
-                <span className="absolute left-0 text-gold/25">—</span>
-                {item}
-              </li>
-            ))}
-          </ul>
+          {/* 3-Month Engagement */}
+          <div className="bg-navy-deep/50 border border-gold/20 rounded-xl p-8 mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
+              <div>
+                <h3 className="text-xl font-serif text-gold-light mb-2">3-Month Engagement</h3>
+                <p className="text-text-secondary">
+                  For leaders who need focused recalibration
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-serif text-gold">£3,000</div>
+                <p className="text-sm text-text-muted">complete engagement</p>
+              </div>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-4 pt-6 border-t border-gold/10">
+              <div className="text-text-secondary text-sm">
+                <span className="text-gold mr-2">—</span>
+                Serious enough to ensure commitment
+              </div>
+              <div className="text-text-secondary text-sm">
+                <span className="text-gold mr-2">—</span>
+                Accessible without board approval
+              </div>
+              <div className="text-text-secondary text-sm">
+                <span className="text-gold mr-2">—</span>
+                Room to go deeper if needed
+              </div>
+            </div>
+          </div>
 
           {/* 6-Month Option */}
-          <div className="border-t border-gold/15 pt-12">
-            <h3 className="text-[1.4rem] font-serif text-gold-light mb-4">The 6-Month Engagement</h3>
-            <p className="text-text-secondary mb-4">
-              For leaders navigating heavier waters — exits, raises, restructures, identity shifts.
-            </p>
-            <div className="text-[3.5rem] font-serif text-gold leading-none mb-4">£5,500</div>
-            <p className="text-text-secondary mb-4">Same rhythm. Longer runway. Mid-point recalibration session.</p>
-            <p className="text-text-muted italic">
-              This version is for clients who need more than clarity. They need capacity.
+          <div className="bg-navy-deep/30 border border-white/10 rounded-xl p-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4">
+              <div>
+                <h3 className="text-xl font-serif text-gold-light mb-2">6-Month Engagement</h3>
+                <p className="text-text-secondary">
+                  For leaders navigating heavier waters — exits, raises, restructures, identity shifts
+                </p>
+              </div>
+              <div className="text-right">
+                <div className="text-3xl font-serif text-gold">£5,500</div>
+                <p className="text-sm text-text-muted">complete engagement</p>
+              </div>
+            </div>
+            <p className="text-text-muted text-sm">
+              Same rhythm. Longer runway. Mid-point recalibration session included.
             </p>
           </div>
         </div>

@@ -87,18 +87,31 @@ export default function Assessment() {
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [hasStarted, setHasStarted] = useState(false);
   const [sessionId] = useState(() => generateSessionId());
+  const [hasSavedProgress, setHasSavedProgress] = useState(false);
 
   const submitMutation = trpc.assessment.submit.useMutation();
 
-  // Load saved progress from localStorage on mount
+  // Check URL params for fresh start
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('fresh') === 'true') {
+      localStorage.removeItem('assessmentProgress');
+      // Remove the param from URL without refresh
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+    
+    // Load saved progress from localStorage on mount
     const savedProgress = localStorage.getItem('assessmentProgress');
     if (savedProgress) {
       try {
         const { name: savedName, email: savedEmail, responses: savedResponses, currentSection: savedSection, hasStarted: savedHasStarted } = JSON.parse(savedProgress);
         if (savedName) setName(savedName);
         if (savedEmail) setEmail(savedEmail);
-        if (savedResponses) setResponses(savedResponses);
+        if (savedResponses && Object.keys(savedResponses).length > 0) {
+          setResponses(savedResponses);
+          setHasSavedProgress(true);
+        }
         if (savedSection !== undefined) setCurrentSection(savedSection);
         if (savedHasStarted) setHasStarted(savedHasStarted);
       } catch (e) {
@@ -120,9 +133,15 @@ export default function Assessment() {
     }
   }, [name, email, responses, currentSection, hasStarted]);
 
-  // Clear saved progress after successful submission
+  // Clear saved progress
   const clearSavedProgress = () => {
     localStorage.removeItem('assessmentProgress');
+    setName("");
+    setEmail("");
+    setResponses({});
+    setCurrentSection(0);
+    setHasStarted(false);
+    setHasSavedProgress(false);
   };
 
   const currentSectionData = ASSESSMENT_SECTIONS[currentSection];

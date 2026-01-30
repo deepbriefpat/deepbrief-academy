@@ -74,19 +74,13 @@ export async function transcribeAudio(
   options: TranscribeOptions
 ): Promise<TranscriptionResponse | TranscriptionError> {
   try {
-    // Step 1: Validate environment configuration
-    if (!ENV.forgeApiUrl) {
+    // Step 1: Validate environment configuration - use OpenAI API key
+    const openaiApiKey = ENV.openaiApiKey;
+    if (!openaiApiKey) {
       return {
         error: "Voice transcription service is not configured",
         code: "SERVICE_ERROR",
-        details: "BUILT_IN_FORGE_API_URL is not set"
-      };
-    }
-    if (!ENV.forgeApiKey) {
-      return {
-        error: "Voice transcription service authentication is missing",
-        code: "SERVICE_ERROR",
-        details: "BUILT_IN_FORGE_API_KEY is not set"
+        details: "OPENAI_API_KEY is not set"
       };
     }
 
@@ -106,13 +100,13 @@ export async function transcribeAudio(
       audioBuffer = Buffer.from(await response.arrayBuffer());
       mimeType = response.headers.get('content-type') || 'audio/mpeg';
       
-      // Check file size (16MB limit)
+      // Check file size (25MB limit for OpenAI Whisper)
       const sizeMB = audioBuffer.length / (1024 * 1024);
-      if (sizeMB > 16) {
+      if (sizeMB > 25) {
         return {
           error: "Audio file exceeds maximum size limit",
           code: "FILE_TOO_LARGE",
-          details: `File size is ${sizeMB.toFixed(2)}MB, maximum allowed is 16MB`
+          details: `File size is ${sizeMB.toFixed(2)}MB, maximum allowed is 25MB`
         };
       }
     } catch (error) {
@@ -123,7 +117,7 @@ export async function transcribeAudio(
       };
     }
 
-    // Step 3: Create FormData for multipart upload to Whisper API
+    // Step 3: Create FormData for multipart upload to OpenAI Whisper API
     const formData = new FormData();
     
     // Create a Blob from the buffer and append to form
@@ -142,21 +136,11 @@ export async function transcribeAudio(
     );
     formData.append("prompt", prompt);
 
-    // Step 4: Call the transcription service
-    const baseUrl = ENV.forgeApiUrl.endsWith("/")
-      ? ENV.forgeApiUrl
-      : `${ENV.forgeApiUrl}/`;
-    
-    const fullUrl = new URL(
-      "v1/audio/transcriptions",
-      baseUrl
-    ).toString();
-
-    const response = await fetch(fullUrl, {
+    // Step 4: Call the OpenAI Whisper API directly
+    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
-        authorization: `Bearer ${ENV.forgeApiKey}`,
-        "Accept-Encoding": "identity",
+        Authorization: `Bearer ${openaiApiKey}`,
       },
       body: formData,
     });

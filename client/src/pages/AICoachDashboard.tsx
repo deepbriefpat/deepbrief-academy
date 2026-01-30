@@ -476,24 +476,32 @@ export default function AICoachDashboard() {
             <div className="space-y-3">
               <button
                 onClick={async () => {
-                  setCurrentSessionId(parseInt(pausedSessionId));
-                  const session = await getSessionMutation.mutateAsync({ sessionId: parseInt(pausedSessionId) });
-                  if (session) {
-                    setChatMessages(session.messages as any[]);
-                    // Generate AI-powered session summary
-                    try {
-                      const summaryResult = await generateSummaryMutation.mutateAsync({ sessionId: parseInt(pausedSessionId) });
-                      if (summaryResult?.summary) {
-                        setSessionSummary(summaryResult.summary);
-                        setShowSummaryBanner(true);
+                  try {
+                    setCurrentSessionId(parseInt(pausedSessionId));
+                    const session = await getSessionMutation.mutateAsync({ sessionId: parseInt(pausedSessionId) });
+                    if (session) {
+                      // Safely handle messages - ensure it's always an array
+                      const messages = Array.isArray(session.messages) ? session.messages : [];
+                      setChatMessages(messages);
+                      // Generate AI-powered session summary
+                      try {
+                        const summaryResult = await generateSummaryMutation.mutateAsync({ sessionId: parseInt(pausedSessionId) });
+                        if (summaryResult?.summary) {
+                          setSessionSummary(summaryResult.summary);
+                          setShowSummaryBanner(true);
+                        }
+                      } catch (err) {
+                        console.error("Failed to generate summary:", err);
+                        // Don't block session resume if summary fails
                       }
-                    } catch (err) {
-                      console.error("Failed to generate summary:", err);
-                      // Don't block session resume if summary fails
                     }
+                    setShowResumeModal(false);
+                    toast.success("Session resumed!");
+                  } catch (error) {
+                    console.error("Failed to resume session:", error);
+                    toast.error("Failed to resume session. Please try again.");
+                    setShowResumeModal(false);
                   }
-                  setShowResumeModal(false);
-                  toast.success("Session resumed!");
                 }}
                 className="w-full px-6 py-4 bg-[#4A6741] text-white font-semibold rounded-lg hover:bg-[#4A6741]/90 transition-all flex items-center justify-center gap-2"
               >

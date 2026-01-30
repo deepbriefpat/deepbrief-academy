@@ -97,7 +97,7 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
                 </Button>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[350px] overflow-y-auto p-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 max-h-[350px] overflow-y-auto p-1">
               {COACH_PROFILES.map((coach) => {
                 const isSelected = selectedCoaches.includes(coach.id);
                 const isDisabled = selectedCoaches.length >= 3 && !isSelected;
@@ -107,18 +107,18 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
                     key={coach.id}
                     onClick={() => toggleCoach(coach.id)}
                     disabled={isDisabled}
-                    className={`p-4 rounded-xl border-2 transition-all text-left ${
+                    className={`p-3 rounded-xl border-2 transition-all text-left ${
                       isSelected
                         ? "border-[#4A6741] bg-[#4A6741]/10 shadow-md"
                         : "border-[#E6E2D6] hover:border-[#4A6741]/50 hover:shadow-sm bg-white"
                     } disabled:opacity-40 disabled:cursor-not-allowed`}
                   >
-                    <div className="flex items-start gap-3">
+                    <div className="flex flex-col items-center text-center gap-2">
                       <div className={`relative flex-shrink-0 ${isSelected ? "ring-2 ring-[#4A6741] ring-offset-2" : ""} rounded-full`}>
                         <img
                           src={coach.avatar}
                           alt={coach.name}
-                          className="w-14 h-14 rounded-full object-cover border-2 border-white"
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover border-2 border-white"
                         />
                         {isSelected && (
                           <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#4A6741] rounded-full flex items-center justify-center">
@@ -126,45 +126,37 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
                           </div>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-[#2C2C2C]">{coach.name}</p>
-                        <p className="text-xs text-[#6B6B60] mb-2">{coach.title}</p>
+                      <div className="w-full min-w-0">
+                        <p className="text-xs sm:text-sm font-bold text-[#2C2C2C] truncate">{coach.name}</p>
+                        <p className="text-[10px] sm:text-xs text-[#6B6B60] truncate">{coach.title}</p>
                         
-                        {/* Key specialties */}
-                        <div className="flex flex-wrap gap-1">
+                        {/* Key specialties - hide on smallest screens */}
+                        <div className="hidden sm:flex flex-wrap justify-center gap-1 mt-2">
                           {coach.specialties.slice(0, 2).map((specialty, idx) => (
                             <Badge 
                               key={idx} 
                               variant="outline" 
-                              className="text-[10px] px-1.5 py-0 bg-[#4A6741]/5 border-[#4A6741]/20 text-[#4A6741] font-medium"
+                              className="text-[9px] px-1 py-0 bg-[#4A6741]/5 border-[#4A6741]/20 text-[#4A6741] font-medium"
                             >
                               {specialty}
                             </Badge>
                           ))}
-                          {coach.specialties.length > 2 && (
-                            <Badge 
-                              variant="outline" 
-                              className="text-[10px] px-1.5 py-0 bg-[#E6E2D6] border-[#E6E2D6] text-[#6B6B60]"
-                            >
-                              +{coach.specialties.length - 2}
-                            </Badge>
-                          )}
                         </div>
                         
                         {/* Session count if any */}
                         {sessionCountByCoach[coach.id] > 0 && (
-                          <div className="flex items-center gap-1 mt-2 text-xs text-[#D4A853]">
+                          <div className="flex items-center justify-center gap-1 mt-2 text-[10px] sm:text-xs text-[#D4A853]">
                             <MessageSquare className="w-3 h-3" />
-                            <span className="font-medium">{sessionCountByCoach[coach.id]} sessions</span>
+                            <span className="font-medium">{sessionCountByCoach[coach.id]}</span>
                           </div>
                         )}
                       </div>
                     </div>
                     
                     {isRecommended(coach.id) && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-[#D4A853] font-semibold">
+                      <div className="mt-2 flex items-center justify-center gap-1 text-[10px] sm:text-xs text-[#D4A853] font-semibold">
                         <Star className="w-3 h-3 fill-[#D4A853]" />
-                        Recommended for you
+                        <span className="hidden sm:inline">Recommended</span>
                       </div>
                     )}
                   </button>

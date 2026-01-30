@@ -854,7 +854,16 @@ export default function AICoachDashboard() {
                           }
                         }}
                         disabled={false}
-                        previouslyUsedCoaches={(sessions ?? []).map(s => s.coachId).filter((id, index, self) => id && self.indexOf(id) === index)}
+                        previouslyUsedCoaches={(() => {
+                          try {
+                            const sessionList = Array.isArray(sessions) ? sessions : [];
+                            return sessionList
+                              .map(s => s?.coachId)
+                              .filter((id, index, self) => id && self.indexOf(id) === index);
+                          } catch {
+                            return [];
+                          }
+                        })()}
                       />
                     </div>
                   </div>
@@ -1200,11 +1209,12 @@ export default function AICoachDashboard() {
                 onUpdateGoal={async (goalId, updates) => {
                   await updateGoalMutation.mutateAsync({
                     goalId,
-                    title: updates.title || "",
-                    description: updates.description || "",
-                    category: "leadership",
+                    title: updates.title,
+                    description: updates.description,
+                    category: updates.category as any || "leadership",
                     targetDate: updates.targetDate,
-                    milestones: [],
+                    milestones: updates.milestones || [],
+                    isFocus: updates.isFocus,
                   });
                   utils.aiCoach.getGoals.invalidate();
                 }}
@@ -1345,47 +1355,57 @@ export default function AICoachDashboard() {
                 <span className="ml-3 text-gray-600">Loading session history...</span>
               </div>
             )}
-            {!sessionsLoading && !sessionsError && (
+            {!sessionsLoading && !sessionsError && sessions && (
             <SessionHistory 
-              sessions={(sessions ?? []).map((session: any) => {
-                // Parse summary if it's JSON
-                let summaryText = `Session on ${new Date(session.createdAt).toLocaleDateString()}`;
-                if (session.summary) {
-                  try {
-                    const parsed = JSON.parse(session.summary);
-                    if (parsed && parsed.keyThemes && Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0) {
-                      summaryText = parsed.keyThemes[0]; // Use first key theme as summary
+              sessions={(() => {
+                // Ultra-defensive session mapping
+                try {
+                  const sessionList = Array.isArray(sessions) ? sessions : [];
+                  return sessionList.map((session: any) => {
+                    if (!session) return null;
+                    
+                    // Parse summary if it's JSON
+                    let summaryText = `Session on ${new Date(session.createdAt || Date.now()).toLocaleDateString()}`;
+                    if (session.summary) {
+                      try {
+                        const parsed = JSON.parse(session.summary);
+                        if (parsed && parsed.keyThemes && Array.isArray(parsed.keyThemes) && parsed.keyThemes.length > 0) {
+                          summaryText = parsed.keyThemes[0];
+                        }
+                      } catch {
+                        summaryText = String(session.summary);
+                      }
                     }
-                  } catch {
-                    // If not JSON, use as-is
-                    summaryText = session.summary;
-                  }
-                }
-                
-                // Safely handle messages - could be string, array, or undefined
-                let messagesArray: Array<{ role: string; content: string }> = [];
-                if (session.messages) {
-                  if (Array.isArray(session.messages)) {
-                    messagesArray = session.messages;
-                  } else if (typeof session.messages === 'string') {
+                    
+                    // Safely handle messages - could be string, array, or undefined
+                    let messagesArray: Array<{ role: string; content: string }> = [];
                     try {
-                      const parsed = JSON.parse(session.messages);
-                      messagesArray = Array.isArray(parsed) ? parsed : [];
+                      if (session.messages) {
+                        if (Array.isArray(session.messages)) {
+                          messagesArray = session.messages.filter((m: any) => m && typeof m === 'object');
+                        } else if (typeof session.messages === 'string') {
+                          const parsed = JSON.parse(session.messages);
+                          messagesArray = Array.isArray(parsed) ? parsed.filter((m: any) => m && typeof m === 'object') : [];
+                        }
+                      }
                     } catch {
                       messagesArray = [];
                     }
-                  }
+                    
+                    return {
+                      id: session.id || 0,
+                      startedAt: session.createdAt || new Date(),
+                      endedAt: session.endedAt,
+                      messageCount: messagesArray.length,
+                      summary: summaryText,
+                      messages: messagesArray,
+                    };
+                  }).filter(Boolean);
+                } catch (err) {
+                  console.error('Error mapping sessions:', err);
+                  return [];
                 }
-                
-                return {
-                  id: session.id,
-                  startedAt: session.createdAt,
-                  endedAt: session.endedAt,
-                  messageCount: messagesArray.length,
-                  summary: summaryText,
-                  messages: messagesArray,
-                };
-              })}
+              })()}
               expandLatest={expandLatestSession}
               onResumeSession={async (sessionId) => {
                 // Load the session messages and switch to chat tab
@@ -1539,19 +1559,19 @@ export default function AICoachDashboard() {
       }}
     />
 
-    {/* Session Summary Modal - FIXED: Added open prop */}
+    {/* Session Summary Modal - Shows after ending session */}
     <SessionSummaryModal
-      open={showSummaryModal && sessionSummary && typeof sessionSummary === 'object' && !!sessionSummary.keyThemes}
+      open={showSummaryModal && !!sessionSummary}
       onClose={() => {
         setShowSummaryModal(false);
         setSessionSummary(null);
       }}
-      summary={sessionSummary || {
+      summary={typeof sessionSummary === 'object' && sessionSummary !== null ? sessionSummary : {
         userName: user?.name || 'User',
         sessionDate: new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-        keyThemes: [],
-        patrickObservation: '',
-        nextSessionPrompt: '',
+        keyThemes: typeof sessionSummary === 'string' ? [sessionSummary] : ['Session completed'],
+        patrickObservation: typeof sessionSummary === 'string' ? sessionSummary : 'Great progress in this session.',
+        nextSessionPrompt: 'Continue working on your commitments before our next session.',
         commitments: []
       }}
     />

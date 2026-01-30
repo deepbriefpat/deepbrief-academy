@@ -4,7 +4,9 @@ import axios, { type AxiosInstance } from "axios";
 import { parse as parseCookieHeader } from "cookie";
 import type { Request } from "express";
 import { SignJWT, jwtVerify } from "jose";
+import { eq } from "drizzle-orm";
 import type { User } from "../../drizzle/schema";
+import { users } from "../../drizzle/schema";
 import { ENV } from "./env";
 import type {
   ExchangeTokenRequest,
@@ -13,6 +15,7 @@ import type {
   GetUserInfoWithJwtRequest,
   GetUserInfoWithJwtResponse,
 } from "./types/manusTypes";
+
 // Utility function
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.length > 0;
@@ -112,11 +115,6 @@ class SDKServer {
     return first ? first.toLowerCase() : null;
   }
 
-  /**
-   * Exchange OAuth authorization code for access token
-   * @example
-   * const tokenResponse = await sdk.exchangeCodeForToken(code, state);
-   */
   async exchangeCodeForToken(
     code: string,
     state: string
@@ -124,11 +122,6 @@ class SDKServer {
     return this.oauthService.getTokenByCode(code, state);
   }
 
-  /**
-   * Get user information using access token
-   * @example
-   * const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
-   */
   async getUserInfo(accessToken: string): Promise<GetUserInfoResponse> {
     const data = await this.oauthService.getUserInfoByToken({
       accessToken,
@@ -158,11 +151,6 @@ class SDKServer {
     return new TextEncoder().encode(secret);
   }
 
-  /**
-   * Create a session token for a Manus user openId
-   * @example
-   * const sessionToken = await sdk.createSessionToken(userInfo.openId);
-   */
   async createSessionToken(
     openId: string,
     options: { expiresInMs?: number; name?: string; email?: string; role?: string } = {}
@@ -186,9 +174,6 @@ class SDKServer {
     const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1000);
     const secretKey = this.getSessionSecret();
 
-    console.log("[Auth] Signing session with appId:", payload.appId);
-    console.log("[Auth] Session secret length:", ENV.cookieSecret?.length || 0);
-
     return new SignJWT({
       openId: payload.openId,
       appId: payload.appId,
@@ -207,21 +192,13 @@ class SDKServer {
       return null;
     }
 
-    console.log("[Auth] Verifying session, cookie length:", cookieValue.length);
-
     try {
       const secretKey = this.getSessionSecret();
-      console.log("[Auth] Using secret length:", ENV.cookieSecret?.length || 0);
-      
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
       
-      console.log("[Auth] JWT verified, payload keys:", Object.keys(payload));
-      
       const { openId, appId, name } = payload as Record<string, unknown>;
-
-      console.log("[Auth] openId:", openId, "appId:", appId, "name:", name);
 
       if (
         !isNonEmptyString(openId) ||
@@ -229,17 +206,10 @@ class SDKServer {
         !isNonEmptyString(name)
       ) {
         console.warn("[Auth] Session payload missing required fields");
-        console.warn("[Auth] openId valid:", isNonEmptyString(openId));
-        console.warn("[Auth] appId valid:", isNonEmptyString(appId));
-        console.warn("[Auth] name valid:", isNonEmptyString(name));
         return null;
       }
 
-      return {
-        openId,
-        appId,
-        name,
-      };
+      return { openId, appId, name };
     } catch (error) {
       console.warn("[Auth] Session verification failed", String(error));
       return null;
@@ -271,77 +241,40 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    console.log("[Auth] authenticateRequest called");
-    console.log("[Auth] Cookie header present:", !!req.headers.cookie);
-    
-    // Regular authentication flow
+    // Parse cookies
     const cookies = this.parseCookies(req.headers.cookie);
-    console.log("[Auth] Parsed cookies:", Array.from(cookies.keys()));
-    
     const sessionCookie = cookies.get(COOKIE_NAME);
-    console.log("[Auth] Session cookie (", COOKIE_NAME, ") found:", !!sessionCookie);
     
+    // Verify session
     const session = await this.verifySession(sessionCookie);
-
     if (!session) {
-      console.warn("[Auth] Session verification returned null");
       throw ForbiddenError("Invalid session cookie");
     }
 
-    console.log("[Auth] Session verified for openId:", session.openId);
-
-    const sessionUserId = session.openId;
-    const signedInAt = new Date();
+    // Get database connection using dynamic import
+    const { getDb } = await import("../db");
+    const db = await getDb();
     
-    console.log("[Auth] About to call getUserByOpenId with:", sessionUserId);
-    let user: User | null = null;
-    try {
-      // Use dynamic import to avoid bundling issues
-      const dbModule = await import("../db");
-      console.log("[Auth] db module keys:", Object.keys(dbModule));
-      user = await dbModule.getUserByOpenId(sessionUserId);
-      console.log("[Auth] getUserByOpenId returned:", user ? `user id=${user.id}, email=${user.email}, role=${user.role}` : "null");
-    } catch (dbError) {
-      console.error("[Auth] getUserByOpenId threw error:", dbError);
-      throw ForbiddenError("Database error during auth");
+    if (!db) {
+      console.error("[Auth] Database not available");
+      throw ForbiddenError("Database not available");
     }
 
-    // If user not in DB, try to create them
-    if (!user) {
-      console.log("[Auth] User not found, attempting to create...");
-      try {
-        const dbModule = await import("../db");
-        await dbModule.upsertUser({
-          openId: sessionUserId,
-          name: session.name || null,
-          lastSignedIn: signedInAt,
-        });
-        user = await dbModule.getUserByOpenId(sessionUserId);
-        console.log("[Auth] After upsert, user:", user ? `id=${user.id}` : "still null");
-      } catch (error) {
-        console.error("[Auth] Failed to create user:", error);
-        throw ForbiddenError("Failed to create user");
-      }
-    }
+    // Query user directly
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.openId, session.openId))
+      .limit(1);
+
+    const user = result.length > 0 ? result[0] : null;
 
     if (!user) {
-      console.error("[Auth] User still null after all attempts");
+      console.error("[Auth] User not found for openId:", session.openId);
       throw ForbiddenError("User not found");
     }
 
-    // Update last signed in
-    try {
-      const dbModule = await import("../db");
-      await dbModule.upsertUser({
-        openId: user.openId,
-        lastSignedIn: signedInAt,
-      });
-    } catch (updateError) {
-      console.warn("[Auth] Failed to update lastSignedIn:", updateError);
-      // Don't throw - user is authenticated, this is just a tracking update
-    }
-
-    console.log("[Auth] Authentication successful for user:", user.email, "role:", user.role);
+    console.log("[Auth] Authenticated user:", user.email, "role:", user.role);
     return user;
   }
 }

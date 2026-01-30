@@ -39,7 +39,7 @@ const WELCOME_SHOWN_KEY = "aiCoachDashboardWelcomeShown";
 const GUEST_PASS_KEY = "aiCoachGuestPassCode";
 
 export default function AICoachDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<"chat" | "goals" | "commitments" | "patterns" | "insights" | "analytics">("chat");
   const [expandLatestSession, setExpandLatestSession] = useState(false);
@@ -224,14 +224,20 @@ export default function AICoachDashboard() {
   }, [chatMessages]);
 
   useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
     // Skip profile check for guest mode - guests don't need a profile
     // Also skip for admins who might not have a profile yet
     if (!isGuestMode && !profile && user?.role !== "admin") {
       setLocation("/ai-coach/onboarding");
     }
-  }, [profile, isGuestMode, setLocation, user]);
+  }, [profile, isGuestMode, setLocation, user, authLoading]);
 
   useEffect(() => {
+    // Wait for auth to finish loading before making redirect decisions
+    if (authLoading) return;
+    
     // Allow access if:
     // 1. Valid guest pass, OR
     // 2. Active/trialing subscription, OR
@@ -254,7 +260,7 @@ export default function AICoachDashboard() {
         localStorage.setItem('aiCoachSubscriptionTracked', 'true');
       }
     }
-  }, [subscription, isGuestMode, guestPassCode, guestPassValidation, setLocation, user]);
+  }, [subscription, isGuestMode, guestPassCode, guestPassValidation, setLocation, user, authLoading]);
 
   const handleStartSession = async () => {
     // For guests, just initialize the chat without creating a DB session
@@ -410,9 +416,9 @@ export default function AICoachDashboard() {
   // Loading state - for subscribers need profile & subscription, for guests need valid pass
   // Admins can bypass subscription requirement
   const isAdmin = user?.role === "admin";
-  const isLoading = isGuestMode 
+  const isLoading = authLoading || (isGuestMode 
     ? (guestPassCode && guestPassValidation === undefined) // Still validating guest pass
-    : (!profile || (!subscription && !isAdmin)); // Still loading subscriber data (admins can proceed without subscription)
+    : (!profile || (!subscription && !isAdmin))); // Still loading subscriber data (admins can proceed without subscription)
     
   if (isLoading) {
     return (

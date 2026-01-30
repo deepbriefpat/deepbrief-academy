@@ -1862,50 +1862,80 @@ Remember: They came to you because they're under pressure and need clarity. Give
         personalNote: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { notifyOwner } = await import("./_core/notification");
+        const { sendEmail } = await import("./_core/emailService");
         
-        // Format summary as text
-        let emailBody = `COACHING SESSION SUMMARY\n`;
-        emailBody += `${input.summary.sessionDate}\n\n`;
+        // Format summary as HTML email
+        let emailHtml = `
+          <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #4A6741; border-bottom: 2px solid #4A6741; padding-bottom: 10px;">
+              Coaching Session Summary
+            </h1>
+            <p style="color: #6B6B60;">${input.summary.sessionDate}</p>
+        `;
         
         if (input.personalNote) {
-          emailBody += `Personal Note:\n${input.personalNote}\n\n`;
+          emailHtml += `
+            <div style="background: #F7F5F0; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: #2C2C2C;"><strong>Personal Note:</strong></p>
+              <p style="margin: 10px 0 0 0; color: #2C2C2C;">${input.personalNote}</p>
+            </div>
+          `;
         }
         
-        emailBody += `KEY THEMES\n`;
-        input.summary.keyThemes.forEach((theme, i) => {
-          emailBody += `${i + 1}. ${theme}\n`;
+        emailHtml += `<h2 style="color: #2C2C2C; margin-top: 25px;">Key Themes</h2><ul>`;
+        input.summary.keyThemes.forEach((theme) => {
+          emailHtml += `<li style="color: #2C2C2C; margin: 8px 0;">${theme}</li>`;
         });
+        emailHtml += `</ul>`;
         
-        emailBody += `\nPATRICK'S OBSERVATION\n`;
-        emailBody += `${input.summary.patrickObservation}\n\n`;
+        emailHtml += `
+          <div style="background: #F7F5F0; padding: 15px; border-left: 4px solid #4A6741; margin: 20px 0;">
+            <h3 style="color: #2C2C2C; margin-top: 0;">Patrick's Observation</h3>
+            <p style="color: #2C2C2C;">${input.summary.patrickObservation}</p>
+          </div>
+        `;
         
-        emailBody += `NEXT SESSION\n`;
-        emailBody += `${input.summary.nextSessionPrompt}\n\n`;
+        emailHtml += `
+          <div style="background: #E8F4F8; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #2C2C2C; margin-top: 0;">Before Next Session</h3>
+            <p style="color: #2C2C2C;">${input.summary.nextSessionPrompt}</p>
+          </div>
+        `;
         
         if (input.summary.commitments.length > 0) {
-          emailBody += `COMMITMENTS\n`;
-          input.summary.commitments.forEach((c, i) => {
-            emailBody += `${i + 1}. ${c.action}`;
-            if (c.deadline) emailBody += ` (by ${c.deadline})`;
-            if (c.context) emailBody += `\n   ${c.context}`;
-            emailBody += `\n`;
+          emailHtml += `<h2 style="color: #2C2C2C;">Commitments</h2><ul>`;
+          input.summary.commitments.forEach((c) => {
+            emailHtml += `<li style="color: #2C2C2C; margin: 8px 0;"><strong>${c.action}</strong>`;
+            if (c.deadline) emailHtml += ` <span style="color: #4A6741;">(by ${c.deadline})</span>`;
+            if (c.context) emailHtml += `<br><span style="color: #6B6B60; font-size: 14px;">${c.context}</span>`;
+            emailHtml += `</li>`;
           });
+          emailHtml += `</ul>`;
         }
         
-        emailBody += `\n---\nShared from The Deep Brief - Leadership Clarity Under Pressure\nthedeepbrief.co.uk`;
+        emailHtml += `
+          <hr style="border: none; border-top: 1px solid #E6E2D6; margin: 30px 0;">
+          <p style="color: #6B6B60; font-size: 12px;">
+            Shared from Thinking Patterns Hub - Leadership Clarity Under Pressure<br>
+            <a href="https://thinkingpatternshub.com" style="color: #4A6741;">thinkingpatternshub.com</a>
+          </p>
+        </div>
+        `;
         
-        // Send notification to owner about the share
-        await notifyOwner({
-          title: "Session Summary Shared",
-          content: `${ctx.user.name || 'A user'} shared their session summary with ${input.recipientEmail}`
-        });
-        
-        // In a real implementation, you would send the email here
-        // For now, we'll use the notification system as a placeholder
-        // TODO: Implement actual email sending via Mandrill or similar
-        
-        return { success: true };
+        try {
+          // Send email to recipient
+          await sendEmail({
+            to: input.recipientEmail,
+            subject: `Coaching Session Summary - ${input.summary.sessionDate}`,
+            html: emailHtml,
+          });
+          
+          console.log(`[shareSummary] Email sent to ${input.recipientEmail}`);
+          return { success: true };
+        } catch (error) {
+          console.error(`[shareSummary] Failed to send email:`, error);
+          throw new Error("Failed to send email. Please check your email configuration.");
+        }
       }),
 
     // Create a goal

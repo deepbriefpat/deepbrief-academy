@@ -5,7 +5,7 @@
  */
 
 import { useState } from "react";
-import { Calendar, ChevronDown, AlertCircle } from "lucide-react";
+import { Calendar, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,16 +13,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   generateGoogleCalendarUrl,
   generateOutlookCalendarUrl,
@@ -44,7 +34,6 @@ interface CalendarExportButtonProps {
   location?: string;
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg";
-  onRequestSetDate?: () => void; // Callback when user needs to set a date
 }
 
 export function CalendarExportButton({ 
@@ -54,11 +43,9 @@ export function CalendarExportButton({
   startDate,
   location,
   variant = "outline",
-  size = "sm",
-  onRequestSetDate
+  size = "sm" 
 }: CalendarExportButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [showDateAlert, setShowDateAlert] = useState(false);
 
   // Determine which data source to use
   const eventTitle = commitment?.action || title || "Event";
@@ -66,92 +53,40 @@ export function CalendarExportButton({
   const eventDate = commitment?.deadline || startDate;
   const eventLocation = location || "";
 
-  const hasDate = !!eventDate;
+  // Don't show button if no date
+  if (!eventDate) {
+    return null;
+  }
 
-  const handleButtonClick = () => {
-    if (!hasDate) {
-      setShowDateAlert(true);
-    }
-  };
-
-  const handleSetDate = () => {
-    setShowDateAlert(false);
-    if (onRequestSetDate) {
-      onRequestSetDate();
-    }
-  };
-
-  const calendarEvent = hasDate ? createCommitmentCalendarEvent({
+  const calendarEvent = createCommitmentCalendarEvent({
     action: eventTitle,
-    deadline: new Date(eventDate!),
+    deadline: new Date(eventDate),
     context: eventDescription,
-  }) : null;
+  });
 
   const handleGoogleCalendar = () => {
-    if (!calendarEvent) return;
     const url = generateGoogleCalendarUrl(calendarEvent);
     window.open(url, '_blank');
     setIsOpen(false);
   };
 
   const handleOutlookCalendar = () => {
-    if (!calendarEvent) return;
     const url = generateOutlookCalendarUrl(calendarEvent);
     window.open(url, '_blank');
     setIsOpen(false);
   };
 
   const handleYahooCalendar = () => {
-    if (!calendarEvent) return;
     const url = generateYahooCalendarUrl(calendarEvent);
     window.open(url, '_blank');
     setIsOpen(false);
   };
 
   const handleAppleCalendar = () => {
-    if (!calendarEvent) return;
     const filename = `${eventTitle.substring(0, 30).replace(/[^a-z0-9]/gi, '_')}.ics`;
     downloadICSFile(calendarEvent, filename);
     setIsOpen(false);
   };
-
-  // If no date, show button that prompts to set date
-  if (!hasDate) {
-    return (
-      <>
-        <Button 
-          variant={variant} 
-          size={size} 
-          onClick={handleButtonClick}
-          className="gap-2 bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/60 text-amber-700 dark:text-amber-300 font-semibold hover:border-amber-400/80 transition-all shadow-sm hover:shadow-md"
-        >
-          <Calendar className="h-4 w-4" />
-          <span>Add to Calendar</span>
-        </Button>
-
-        <AlertDialog open={showDateAlert} onOpenChange={setShowDateAlert}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-500" />
-                Set a Target Date First
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                To add this to your calendar, you'll need to set a target date first. 
-                Would you like to set a date now?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleSetDate} className="bg-gold hover:bg-gold-light text-navy-deep">
-                Set Date
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </>
-    );
-  }
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -159,7 +94,7 @@ export function CalendarExportButton({
         <Button 
           variant={variant} 
           size={size} 
-          className="gap-2 bg-emerald-600/90 hover:bg-emerald-600 border-emerald-500 text-white font-semibold hover:border-emerald-400 transition-all shadow-sm hover:shadow-md"
+          className="gap-2 bg-emerald-600 hover:bg-emerald-700 border-emerald-500 text-white font-semibold hover:border-emerald-600 transition-all shadow-sm hover:shadow-md"
         >
           <Calendar className="h-4 w-4" />
           <span>Add to Calendar</span>

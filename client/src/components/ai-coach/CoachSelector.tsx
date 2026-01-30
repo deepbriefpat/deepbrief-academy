@@ -135,7 +135,7 @@ export function CoachSelector({
                 setIsOpen(false);
                 setShowComparison(true);
               }}
-              className="flex items-center gap-2 shrink-0"
+              className="flex items-center gap-2 shrink-0 bg-[#4A6741] text-white hover:bg-[#3d5636] border-[#4A6741] font-semibold"
             >
               <GitCompare className="w-4 h-4" />
               Compare Coaches

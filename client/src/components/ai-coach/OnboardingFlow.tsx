@@ -501,7 +501,7 @@ export function OnboardingFlow({ isOpen, onComplete, onSkip }: OnboardingFlowPro
             <Button
               onClick={handleNext}
               disabled={!canProceed()}
-              className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-navy-900 font-bold shadow-lg shadow-gold-500/30 border border-gold-300 min-w-[120px] flex-1 sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="bg-gradient-to-r from-gold-400 to-gold-600 hover:from-gold-500 hover:to-gold-700 text-white font-bold shadow-lg shadow-gold-500/30 border border-gold-300 min-w-[120px] flex-1 sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {step === totalSteps ? "Get Started" : "Next"}
               {step < totalSteps && <ArrowRight className="w-4 h-4 ml-2" />}

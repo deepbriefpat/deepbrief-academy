@@ -214,19 +214,22 @@ class SDKServer {
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
-      const { openId, appId, name } = payload as Record<string, unknown>;
+      
+      // Support both Manus format (openId, appId, name) and Google OAuth format (userId, openId, email, name)
+      const openId = payload.openId as string | undefined;
+      const appId = payload.appId as string | undefined || ENV.appId || "deepbrief-academy";
+      const name = payload.name as string | undefined || payload.email as string | undefined || "";
 
-      if (
-        !isNonEmptyString(openId) ||
-        !isNonEmptyString(appId) ||
-        !isNonEmptyString(name)
-      ) {
-        console.warn("[Auth] Session payload missing required fields");
+      // For Google OAuth, openId might be constructed as "google_<id>" or use email
+      const effectiveOpenId = openId || (payload.email ? `google_${payload.email}` : undefined);
+
+      if (!isNonEmptyString(effectiveOpenId)) {
+        console.warn("[Auth] Session payload missing openId");
         return null;
       }
 
       return {
-        openId,
+        openId: effectiveOpenId,
         appId,
         name,
       };

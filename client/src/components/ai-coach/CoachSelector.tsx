@@ -93,49 +93,50 @@ export function CoachSelector({
           {/* Gender Filter & Compare Button */}
           <div className="flex items-center justify-between gap-4 mt-4 pb-4 border-b border-[#E6E2D6] flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-[#0a1628] shrink-0">Filter by:</span>
-            <div className="flex gap-2 flex-wrap">              <Button
-                size="sm"
-                variant={selectedGender === "all" ? "default" : "outline"}
-                onClick={() => setSelectedGender("all")}
-                className={selectedGender === "all" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-black font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
-              >
-                All ({COACH_PROFILES.length})
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedGender === "female" ? "default" : "outline"}
-                onClick={() => setSelectedGender("female")}
-                className={selectedGender === "female" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-black font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
-              >
-                Female (8)
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedGender === "male" ? "default" : "outline"}
-                onClick={() => setSelectedGender("male")}
-                className={selectedGender === "male" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-black font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
-              >
-                Male (8)
-              </Button>
-              <Button
-                size="sm"
-                variant={selectedGender === "nonbinary" ? "default" : "outline"}
-                onClick={() => setSelectedGender("nonbinary")}
-                className={selectedGender === "nonbinary" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-black font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
-              >
-                Non-binary (8)
-              </Button>
+              <span className="text-sm font-semibold text-[#0a1628] shrink-0">Filter by:</span>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant={selectedGender === "all" ? "default" : "outline"}
+                  onClick={() => setSelectedGender("all")}
+                  className={selectedGender === "all" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-[#2C2C2C] font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
+                >
+                  All ({COACH_PROFILES.length})
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedGender === "female" ? "default" : "outline"}
+                  onClick={() => setSelectedGender("female")}
+                  className={selectedGender === "female" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-[#2C2C2C] font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
+                >
+                  Female (8)
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedGender === "male" ? "default" : "outline"}
+                  onClick={() => setSelectedGender("male")}
+                  className={selectedGender === "male" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-[#2C2C2C] font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
+                >
+                  Male (8)
+                </Button>
+                <Button
+                  size="sm"
+                  variant={selectedGender === "nonbinary" ? "default" : "outline"}
+                  onClick={() => setSelectedGender("nonbinary")}
+                  className={selectedGender === "nonbinary" ? "bg-[#4A6741] text-white hover:bg-[#3d5636]" : "bg-white text-[#2C2C2C] font-semibold border-[#E6E2D6] hover:bg-[#F5F3EE]"}
+                >
+                  Non-binary (8)
+                </Button>
+              </div>
             </div>
-            </div>
+            {/* FIXED: Compare Coaches button with explicit colors */}
             <Button
               size="sm"
-              variant="outline"
               onClick={() => {
                 setIsOpen(false);
                 setShowComparison(true);
               }}
-              className="flex items-center gap-2 shrink-0 bg-[#4A6741] text-white hover:bg-[#3d5636] border-[#4A6741] font-semibold"
+              className="flex items-center gap-2 shrink-0 bg-[#D4A853] hover:bg-[#c49743] text-white font-semibold border-0"
             >
               <GitCompare className="w-4 h-4" />
               Compare Coaches

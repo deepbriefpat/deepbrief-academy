@@ -155,11 +155,7 @@ class SDKServer {
   }
 
   private getSessionSecret() {
-    // Try JWT_SECRET first (via ENV.cookieSecret), then SESSION_SECRET as fallback
-    const secret = ENV.cookieSecret || process.env.SESSION_SECRET || "";
-    if (!secret) {
-      throw new Error("SESSION_SECRET not configured");
-    }
+    const secret = ENV.cookieSecret;
     return new TextEncoder().encode(secret);
   }
 
@@ -170,12 +166,12 @@ class SDKServer {
    */
   async createSessionToken(
     openId: string,
-    options: { expiresInMs?: number; name?: string } = {}
+    options: { expiresInMs?: number; name?: string; email?: string; role?: string } = {}
   ): Promise<string> {
     return this.signSession(
       {
         openId,
-        appId: ENV.appId,
+        appId: ENV.appId || "deepbrief-academy",
         name: options.name || "",
       },
       options
@@ -190,6 +186,9 @@ class SDKServer {
     const expiresInMs = options.expiresInMs ?? ONE_YEAR_MS;
     const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1000);
     const secretKey = this.getSessionSecret();
+
+    console.log("[Auth] Signing session with appId:", payload.appId);
+    console.log("[Auth] Session secret length:", ENV.cookieSecret?.length || 0);
 
     return new SignJWT({
       openId: payload.openId,
@@ -209,27 +208,36 @@ class SDKServer {
       return null;
     }
 
+    console.log("[Auth] Verifying session, cookie length:", cookieValue.length);
+
     try {
       const secretKey = this.getSessionSecret();
+      console.log("[Auth] Using secret length:", ENV.cookieSecret?.length || 0);
+      
       const { payload } = await jwtVerify(cookieValue, secretKey, {
         algorithms: ["HS256"],
       });
       
-      // Support both Manus format (openId, appId, name) and Google OAuth format (userId, openId, email, name)
-      const openId = payload.openId as string | undefined;
-      const appId = payload.appId as string | undefined || ENV.appId || "deepbrief-academy";
-      const name = payload.name as string | undefined || payload.email as string | undefined || "";
+      console.log("[Auth] JWT verified, payload keys:", Object.keys(payload));
+      
+      const { openId, appId, name } = payload as Record<string, unknown>;
 
-      // For Google OAuth, openId might be constructed as "google_<id>" or use email
-      const effectiveOpenId = openId || (payload.email ? `google_${payload.email}` : undefined);
+      console.log("[Auth] openId:", openId, "appId:", appId, "name:", name);
 
-      if (!isNonEmptyString(effectiveOpenId)) {
-        console.warn("[Auth] Session payload missing openId");
+      if (
+        !isNonEmptyString(openId) ||
+        !isNonEmptyString(appId) ||
+        !isNonEmptyString(name)
+      ) {
+        console.warn("[Auth] Session payload missing required fields");
+        console.warn("[Auth] openId valid:", isNonEmptyString(openId));
+        console.warn("[Auth] appId valid:", isNonEmptyString(appId));
+        console.warn("[Auth] name valid:", isNonEmptyString(name));
         return null;
       }
 
       return {
-        openId: effectiveOpenId,
+        openId,
         appId,
         name,
       };
@@ -264,18 +272,30 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
+    console.log("[Auth] authenticateRequest called");
+    console.log("[Auth] Cookie header present:", !!req.headers.cookie);
+    
     // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
+    console.log("[Auth] Parsed cookies:", Array.from(cookies.keys()));
+    
     const sessionCookie = cookies.get(COOKIE_NAME);
+    console.log("[Auth] Session cookie (", COOKIE_NAME, ") found:", !!sessionCookie);
+    
     const session = await this.verifySession(sessionCookie);
 
     if (!session) {
+      console.warn("[Auth] Session verification returned null");
       throw ForbiddenError("Invalid session cookie");
     }
+
+    console.log("[Auth] Session verified for openId:", session.openId);
 
     const sessionUserId = session.openId;
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
+
+    console.log("[Auth] User found in DB:", !!user);
 
     // If user not in DB, sync from OAuth server automatically
     if (!user) {
@@ -304,6 +324,7 @@ class SDKServer {
       lastSignedIn: signedInAt,
     });
 
+    console.log("[Auth] Authentication successful for user:", user.email);
     return user;
   }
 }

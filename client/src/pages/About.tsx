@@ -147,12 +147,12 @@ export default function About() {
               <div className="relative group overflow-hidden rounded-lg">
                 <img loading="lazy" 
                   src="/patrickradio.webp" 
-                  alt="Rebreather diving" 
+                  alt="Podcasts and speaker engagements" 
                   className="w-full h-64 object-cover transition-transform group-hover:scale-105"
                  
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/80 to-transparent flex items-end p-4">
-                  <p className="text-sm text-white">Rebreather operations</p>
+                  <p className="text-sm text-white">Podcasts and speaker engagements</p>
                 </div>
               </div>
             </div>

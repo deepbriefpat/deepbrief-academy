@@ -1367,7 +1367,11 @@ export default function AICoachDashboard() {
                     generateSummaryMutation.mutateAsync({ sessionId })
                       .then((summaryResult) => {
                         if (summaryResult?.summary) {
-                          setSessionSummary(summaryResult.summary);
+                          // Ensure summary is a string for the banner
+                          const summaryText = typeof summaryResult.summary === 'string' 
+                            ? summaryResult.summary 
+                            : (summaryResult.summary.keyThemes?.[0] || 'Continue your previous conversation.');
+                          setSessionSummary(summaryText);
                           setShowSummaryBanner(true);
                         }
                       })
@@ -1463,10 +1467,9 @@ export default function AICoachDashboard() {
       }}
     />
 
-    {/* Session Summary Modal */}
-    {sessionSummary && (
+   {/* Session Summary Modal - only show if summary has proper structure */}
+    {sessionSummary && typeof sessionSummary === 'object' && sessionSummary.keyThemes && (
       <SessionSummaryModal
-        open={showSummaryModal}
         onClose={() => {
           setShowSummaryModal(false);
           setSessionSummary(null);

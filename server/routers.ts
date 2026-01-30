@@ -1969,6 +1969,7 @@ Remember: They came to you because they're under pressure and need clarity. Give
         targetDate: z.date().optional(),
         milestones: z.array(z.string()).optional(),
         status: z.enum(["active", "completed", "paused", "abandoned"]).optional(),
+        isFocus: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
         const { updateCoachingGoal } = await import("./db");

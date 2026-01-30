@@ -219,9 +219,6 @@ export default function Assessment() {
     }
   };
 
-  // Check if there's saved progress to resume
-  const hasSavedProgress = Object.keys(responses).length > 0;
-
   if (!hasStarted) {
     return (
       <div className="min-h-screen bg-background">

@@ -67,7 +67,7 @@ export default function Home() {
   const [isMobile, setIsMobile] = useState(false);
   const [hasPausedSession, setHasPausedSession] = useState(false);
   const imageRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   // Check for paused session on mount
   useEffect(() => {
@@ -142,7 +142,11 @@ export default function Home() {
             </p>
           </div>
           <div className="max-w-4xl mx-auto text-center mt-12">
-            {user ? (
+            {loading ? (
+              <div className="flex justify-center items-center h-16">
+                <div className="animate-pulse bg-gold/20 rounded-[10px] h-14 w-48"></div>
+              </div>
+            ) : user ? (
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link href="/ai-coach/dashboard">
                   <Button size="lg" className="gap-2 bg-gold hover:bg-gold-light text-navy-deep font-semibold text-lg px-8 py-6 rounded-[10px] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(0,0,0,0.25)]">

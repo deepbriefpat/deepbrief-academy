@@ -287,23 +287,24 @@ export function FocusGoals({
               ))}
             </div>
 
-            {/* Target Date */}
-            {focusGoal.targetDate && (
-              <div className="space-y-2 mb-4">
+            {/* Target Date & Calendar */}
+            <div className="space-y-2 mb-4">
+              {focusGoal.targetDate && (
                 <div className="flex items-center gap-2 text-sm text-[#6B6B60]">
                   <Clock className="w-4 h-4" />
                   <span>{getTimeRemaining(new Date(focusGoal.targetDate))}</span>
                   <span className="text-[#E6E2D6]">•</span>
                   <span>Target: {new Date(focusGoal.targetDate).toLocaleDateString()}</span>
                 </div>
-                <CalendarExportButton
-                  title={focusGoal.title}
-                  description={focusGoal.description || ""}
-                  startDate={new Date(focusGoal.targetDate)}
-                  location="AI Executive Coach"
-                />
-              </div>
-            )}
+              )}
+              <CalendarExportButton
+                title={focusGoal.title}
+                description={focusGoal.description || ""}
+                startDate={focusGoal.targetDate ? new Date(focusGoal.targetDate) : undefined}
+                location="AI Executive Coach"
+                onRequestSetDate={() => setEditingGoal(focusGoal)}
+              />
+            </div>
 
             {/* Milestones as Checklist */}
             {focusGoal.milestones && focusGoal.milestones.length > 0 && (

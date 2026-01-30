@@ -84,34 +84,49 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
             <h3 className="text-sm font-semibold text-[#0a1628] mb-3">
               Select coaches to compare ({selectedCoaches.length}/3)
             </h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[400px] overflow-y-auto p-1">
               {COACH_PROFILES.map((coach) => (
                 <button
                   key={coach.id}
                   onClick={() => toggleCoach(coach.id)}
                   disabled={selectedCoaches.length >= 3 && !selectedCoaches.includes(coach.id)}
-                  className={`p-3 rounded-lg border-2 transition-all text-left ${
+                  className={`p-4 rounded-lg border-2 transition-all text-left ${
                     selectedCoaches.includes(coach.id)
-                      ? "border-[#4A6741] bg-[#4A6741]/5"
-                      : "border-gray-200 hover:border-[#4A6741]/50"
+                      ? "border-[#4A6741] bg-[#4A6741]/10 shadow-md"
+                      : "border-gray-200 hover:border-[#4A6741]/50 hover:shadow-sm"
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-start gap-3">
                     <img
                       src={coach.avatar}
                       alt={coach.name}
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-12 h-12 rounded-full object-cover flex-shrink-0 border-2 border-gray-100"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#0a1628] truncate">{coach.name}</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-bold text-[#0a1628]">{coach.name}</p>
+                        {selectedCoaches.includes(coach.id) && (
+                          <Check className="w-5 h-5 text-[#4A6741] flex-shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-xs text-[#6B6B60] mt-0.5">{coach.title}</p>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {coach.specialties.slice(0, 2).map((specialty, idx) => (
+                          <Badge key={idx} variant="outline" className="text-[10px] px-1.5 py-0 bg-white border-gray-200">
+                            {specialty}
+                          </Badge>
+                        ))}
+                        {coach.specialties.length > 2 && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-white border-gray-200">
+                            +{coach.specialties.length - 2}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                    {selectedCoaches.includes(coach.id) && (
-                      <Check className="w-4 h-4 text-[#4A6741] flex-shrink-0" />
-                    )}
                   </div>
                   {isRecommended(coach.id) && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Star className="w-3 h-3 mr-1" />
+                    <Badge variant="secondary" className="text-xs mt-2 bg-amber-50 text-amber-700 border-amber-200">
+                      <Star className="w-3 h-3 mr-1 fill-amber-500" />
                       Recommended
                     </Badge>
                   )}
@@ -121,10 +136,30 @@ export function CoachComparison({ open, onClose, onSelectCoach }: CoachCompariso
           </div>
         )}
 
+        {/* Guidance when 1 coach selected */}
+        {selectedCoaches.length === 1 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+            <p className="text-amber-800 font-medium">
+              Select at least one more coach to start comparing
+            </p>
+          </div>
+        )}
+
         {/* Comparison Table */}
         {compareCoaches.length >= 2 && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold text-[#0a1628]">Comparing {compareCoaches.length} coaches</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCoaches([])}
+                className="text-xs"
+              >
+                Clear all
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {compareCoaches.map((coach) => (
                 <Card key={coach!.id} className="relative bg-white border-2 border-[#4A6741]/20 text-[#2C2C2C]">
                   <button

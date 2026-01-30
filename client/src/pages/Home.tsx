@@ -189,7 +189,7 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8 items-center">
               <div className="md:col-span-1">
                 <img 
-                  src="/Patrickheadshot.png" 
+                  src="/Patrickheadshot.webp" 
                   alt="Patrick Voorma" 
                   className="rounded-lg shadow-xl w-full h-auto"
                 />

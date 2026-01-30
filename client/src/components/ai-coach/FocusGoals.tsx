@@ -411,12 +411,22 @@ export function FocusGoals({
                     {goal.description && (
                       <p className="text-sm text-[#6B6B60] line-clamp-2 mb-2">{goal.description}</p>
                     )}
-                    {goal.targetDate && (
-                      <div className="flex items-center gap-1 text-xs text-[#6B6B60]">
-                        <Clock className="w-3 h-3" />
-                        <span>{getTimeRemaining(new Date(goal.targetDate))}</span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {goal.targetDate && (
+                        <div className="flex items-center gap-1 text-xs text-[#6B6B60]">
+                          <Clock className="w-3 h-3" />
+                          <span>{getTimeRemaining(new Date(goal.targetDate))}</span>
+                        </div>
+                      )}
+                      <CalendarExportButton
+                        title={goal.title || "Goal"}
+                        description={goal.description || ""}
+                        startDate={goal.targetDate ? new Date(goal.targetDate) : undefined}
+                        location="AI Executive Coach"
+                        size="sm"
+                        onRequestSetDate={() => setEditingGoal(goal)}
+                      />
+                    </div>
                   </div>
 
                   {/* Actions */}

@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Copy, Search, ExternalLink, CheckCircle2, XCircle, Clock, Plus } from "lucide-react";
+import { Copy, Search, ExternalLink, CheckCircle2, XCircle, Clock, Plus, Mail } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -334,9 +334,17 @@ export function AdminGuestPasses() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => window.open(`${baseUrl}/ai-coach/dashboard?guest=${pass.code}`, "_blank")}
+                              onClick={() => {
+                                const guestLink = `${baseUrl}/ai-coach/dashboard?guest=${pass.code}`;
+                                const subject = encodeURIComponent("Your AI Coaching Guest Pass");
+                                const body = encodeURIComponent(
+                                  `Hi,\n\nYou've been invited to try the AI Executive Coach!\n\nClick the link below to start your free coaching session:\n${guestLink}\n\nThis pass gives you full access to:\n- Unlimited AI coaching conversations\n- Goal tracking and progress monitoring\n- Session summaries and insights\n\nBest regards`
+                                );
+                                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                              }}
+                              title="Send via email"
                             >
-                              <ExternalLink className="h-4 w-4" />
+                              <Mail className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

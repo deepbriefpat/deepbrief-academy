@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { 
   Target, Plus, ChevronRight, CheckCircle2, Circle,
   Calendar, MoreHorizontal, Pencil, Trash2, Star, Clock,
-  MessageSquare, ArrowRight
+  MessageSquare, ArrowRight, MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,12 +90,14 @@ export function FocusGoals({
     setShowAddGoal(false);
   };
 
-  const handleSetFocus = (goalId: number) => {
-    // Unfocus all, then focus this one
-    goals.forEach(g => {
-      if (g.isFocus) onUpdateGoal(g.id, { isFocus: false });
-    });
-    onUpdateGoal(goalId, { isFocus: true });
+  const handleSetFocus = async (goalId: number) => {
+    // First, unfocus all goals (including the current focus)
+    const currentFocus = goals.find(g => g.isFocus);
+    if (currentFocus && currentFocus.id !== goalId) {
+      await onUpdateGoal(currentFocus.id, { isFocus: false });
+    }
+    // Then focus the selected one
+    await onUpdateGoal(goalId, { isFocus: true });
   };
 
   const handleQuickProgress = (goalId: number, milestone: "started" | "halfway" | "almost" | "done") => {
@@ -356,7 +358,7 @@ export function FocusGoals({
         </div>
       )}
 
-      {/* Other Goals - Card List */}
+      {/* Other Goals - Full Card Display Like Focus Goal */}
       {otherGoals.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
@@ -371,77 +373,32 @@ export function FocusGoals({
               Add
             </Button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {otherGoals.map((goal) => (
               <div 
                 key={goal.id}
-                className="group p-4 bg-white rounded-xl border border-[#E6E2D6] hover:border-[#4A6741]/30 transition-all"
+                className="p-5 bg-white rounded-xl border border-[#E6E2D6] hover:border-[#4A6741]/30 transition-all"
               >
-                <div className="flex items-start gap-4">
-                  {/* Progress Circle */}
-                  <div className="relative w-12 h-12 flex-shrink-0">
-                    <svg className="w-12 h-12 -rotate-90">
-                      <circle
-                        cx="24"
-                        cy="24"
-                        r="20"
-                        fill="none"
-                        stroke="#F2F0E9"
-                        strokeWidth="3"
-                      />
-                      <circle
-                        cx="24"
-                        cy="24"
-                        r="20"
-                        fill="none"
-                        stroke="#4A6741"
-                        strokeWidth="3"
-                        strokeDasharray={`${(goal.progress || 0) * 1.256} 125.6`}
-                        className="transition-all"
-                      />
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-[#4A6741]">
-                      {goal.progress || 0}%
-                    </span>
-                  </div>
-
-                  {/* Goal Info */}
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#2C2C2C] mb-1">{goal.title || "Untitled Goal"}</h4>
+                {/* Header with title and actions */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-[#2C2C2C] mb-1">{goal.title || "Untitled Goal"}</h4>
                     {goal.description && (
-                      <p className="text-sm text-[#6B6B60] line-clamp-2 mb-2">{goal.description}</p>
+                      <p className="text-sm text-[#6B6B60]">{goal.description}</p>
                     )}
-                    <div className="flex items-center gap-3 flex-wrap">
-                      {goal.targetDate && (
-                        <div className="flex items-center gap-1 text-xs text-[#6B6B60]">
-                          <Clock className="w-3 h-3" />
-                          <span>{getTimeRemaining(new Date(goal.targetDate))}</span>
-                        </div>
-                      )}
-                      <CalendarExportButton
-                        title={goal.title || "Goal"}
-                        description={goal.description || ""}
-                        startDate={goal.targetDate ? new Date(goal.targetDate) : undefined}
-                        location="AI Executive Coach"
-                        size="sm"
-                        onRequestSetDate={() => setEditingGoal(goal)}
-                      />
-                    </div>
                   </div>
-
-                  {/* Actions */}
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleSetFocus(goal.id)}
                       className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors"
                       title="Set as focus"
                     >
-                      <Star className="w-4 h-4 text-[#D4A853]" />
+                      <Star className="w-5 h-5 text-[#D4A853]" />
                     </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors">
-                          <MoreHorizontal className="w-4 h-4 text-[#6B6B60]" />
+                          <MoreHorizontal className="w-5 h-5 text-[#6B6B60]" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-white">
@@ -464,6 +421,87 @@ export function FocusGoals({
                     </DropdownMenu>
                   </div>
                 </div>
+
+                {/* Progress Bar */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-[#6B6B60]">Progress</span>
+                    <span className="text-sm font-semibold text-[#2C2C2C]">{goal.progress || 0}%</span>
+                  </div>
+                  <div 
+                    className="h-2 bg-[#E6E2D6] rounded-full cursor-pointer overflow-hidden"
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const x = e.clientX - rect.left;
+                      const percentage = Math.round((x / rect.width) * 100);
+                      onUpdateProgress(goal.id, Math.min(100, Math.max(0, percentage)));
+                    }}
+                  >
+                    <div 
+                      className="h-full bg-[#4A6741] rounded-full transition-all"
+                      style={{ width: `${goal.progress || 0}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-[#9CA3AF] mt-1">Click anywhere on the bar to update</p>
+                </div>
+
+                {/* Quick Progress Buttons */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[
+                    { key: "started", label: "Just started", emoji: "🌱", value: 25 },
+                    { key: "halfway", label: "Halfway there", emoji: "🔥", value: 50 },
+                    { key: "almost", label: "Almost done", emoji: "🍊", value: 75 },
+                    { key: "done", label: "Complete!", emoji: "✅", value: 100 },
+                  ].map((option) => (
+                    <button
+                      key={option.key}
+                      onClick={() => onUpdateProgress(goal.id, option.value)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1",
+                        (goal.progress || 0) >= option.value
+                          ? "bg-[#4A6741] text-white"
+                          : "bg-[#F2F0E9] text-[#6B6B60] hover:bg-[#E6E2D6]"
+                      )}
+                    >
+                      <span>{option.emoji}</span>
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Target Date & Calendar */}
+                <div className="flex items-center gap-3 flex-wrap mb-4">
+                  {goal.targetDate && (
+                    <div className="flex items-center gap-2 text-sm text-[#6B6B60]">
+                      <Clock className="w-4 h-4" />
+                      <span>{getTimeRemaining(new Date(goal.targetDate))}</span>
+                      <span className="text-[#E6E2D6]">•</span>
+                      <span>Target: {new Date(goal.targetDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <CalendarExportButton
+                    title={goal.title || "Goal"}
+                    description={goal.description || ""}
+                    startDate={goal.targetDate ? new Date(goal.targetDate) : undefined}
+                    location="AI Executive Coach"
+                    onRequestSetDate={() => setEditingGoal(goal)}
+                  />
+                </div>
+
+                {/* Discuss with Coach Button */}
+                {onStartSession && (
+                  <button
+                    onClick={() => onStartSession(`I'd like to discuss my goal: ${goal.title}. ${goal.description || ''}`)}
+                    className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#F2F0E9] hover:bg-[#E6E2D6] text-[#2C2C2C] font-medium rounded-lg transition-all"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Discuss this with coach
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -547,7 +585,7 @@ function AddGoalDialog({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Have the difficult conversation with my co-founder"
-              className="border-[#E6E2D6] text-base"
+              className="border-[#E6E2D6] text-base text-[#2C2C2C] placeholder:text-[#9CA3AF] bg-white"
               autoFocus
             />
           </div>
@@ -557,7 +595,7 @@ function AddGoalDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Why does this matter? What does success look like? (optional)"
-              className="border-[#E6E2D6] min-h-[80px] text-sm"
+              className="border-[#E6E2D6] min-h-[80px] text-sm text-[#2C2C2C] placeholder:text-[#9CA3AF] bg-white"
             />
           </div>
 
@@ -567,7 +605,7 @@ function AddGoalDialog({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="border-[#E6E2D6]"
+              className="border-[#E6E2D6] text-[#2C2C2C] bg-white"
             />
           </div>
 

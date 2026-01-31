@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { Copy, Search, ExternalLink, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Copy, Search, ExternalLink, CheckCircle2, XCircle, Clock, Plus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -16,11 +17,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function AdminGuestPasses() {
   const { user, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newPassLabel, setNewPassLabel] = useState("");
+  const [newPassExpiry, setNewPassExpiry] = useState("");
 
   // Fetch guest passes with invitations
   const { data: guestPasses = [], isLoading, refetch } = trpc.admin.getGuestPasses.useQuery(
@@ -31,6 +42,27 @@ export function AdminGuestPasses() {
       enabled: user?.role === "admin",
     }
   );
+
+  // Create guest pass mutation
+  const createGuestPassMutation = trpc.aiCoach.createGuestPass.useMutation({
+    onSuccess: () => {
+      toast.success("Guest pass created successfully!");
+      setIsCreateDialogOpen(false);
+      setNewPassLabel("");
+      setNewPassExpiry("");
+      refetch();
+    },
+    onError: (error) => {
+      toast.error(`Failed to create guest pass: ${error.message}`);
+    },
+  });
+
+  const handleCreateGuestPass = () => {
+    createGuestPassMutation.mutate({
+      label: newPassLabel || undefined,
+      expiresAt: newPassExpiry || undefined,
+    });
+  };
 
   // Get base URL for the site
   const baseUrl = window.location.origin;
@@ -104,11 +136,73 @@ export function AdminGuestPasses() {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#2C2C2C] mb-2">Guest Pass Management</h1>
-          <p className="text-[#6B6B60]">
-            View and manage all guest passes. Copy links to share directly with users.
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-[#2C2C2C] mb-2">Guest Pass Management</h1>
+            <p className="text-[#6B6B60]">
+              View and manage all guest passes. Copy links to share directly with users.
+            </p>
+          </div>
+          
+          {/* Create Guest Pass Button */}
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#4A6741] hover:bg-[#3d5636] text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Guest Pass
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-[#2C2C2C]">Create New Guest Pass</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label htmlFor="passLabel" className="text-[#2C2C2C]">Label (Optional)</Label>
+                  <Input
+                    id="passLabel"
+                    placeholder="e.g., Client Demo, Partner Access"
+                    value={newPassLabel}
+                    onChange={(e) => setNewPassLabel(e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-[#6B6B60] mt-1">
+                    Add a label to identify who this pass is for
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="passExpiry" className="text-[#2C2C2C]">Expiration Date (Optional)</Label>
+                  <Input
+                    id="passExpiry"
+                    type="date"
+                    value={newPassExpiry}
+                    onChange={(e) => setNewPassExpiry(e.target.value)}
+                    className="mt-1"
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                  <p className="text-xs text-[#6B6B60] mt-1">
+                    Leave empty for no expiration
+                  </p>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsCreateDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleCreateGuestPass}
+                    disabled={createGuestPassMutation.isPending}
+                    className="flex-1 bg-[#4A6741] hover:bg-[#3d5636] text-white"
+                  >
+                    {createGuestPassMutation.isPending ? "Creating..." : "Create Pass"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Search */}

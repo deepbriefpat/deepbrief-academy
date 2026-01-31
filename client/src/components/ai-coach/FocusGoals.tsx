@@ -37,7 +37,7 @@ interface Goal {
 interface FocusGoalsProps {
   goals: Goal[];
   onCreateGoal: (goal: { title: string; description: string; targetDate?: Date }) => void;
-  onUpdateGoal: (goalId: number, updates: Partial<Goal>) => void;
+  onUpdateGoal: (goalId: number, updates: Partial<Goal>) => void | Promise<void>;
   onDeleteGoal: (goalId: number) => void;
   onUpdateProgress: (goalId: number, progress: number) => void;
   onStartSession?: (goalContext: string) => void;
@@ -90,14 +90,23 @@ export function FocusGoals({
     setShowAddGoal(false);
   };
 
+  const [settingFocus, setSettingFocus] = useState<number | null>(null);
+
   const handleSetFocus = async (goalId: number) => {
-    // First, unfocus all goals (including the current focus)
-    const currentFocus = goals.find(g => g.isFocus);
-    if (currentFocus && currentFocus.id !== goalId) {
-      await onUpdateGoal(currentFocus.id, { isFocus: false });
+    setSettingFocus(goalId);
+    try {
+      // First, unfocus all goals (including the current focus)
+      const currentFocus = goals.find(g => g.isFocus);
+      if (currentFocus && currentFocus.id !== goalId) {
+        await onUpdateGoal(currentFocus.id, { isFocus: false });
+      }
+      // Then focus the selected one
+      await onUpdateGoal(goalId, { isFocus: true });
+    } catch (error) {
+      console.error('Failed to set focus:', error);
+    } finally {
+      setSettingFocus(null);
     }
-    // Then focus the selected one
-    await onUpdateGoal(goalId, { isFocus: true });
   };
 
   const handleQuickProgress = (goalId: number, milestone: "started" | "halfway" | "almost" | "done") => {
@@ -390,10 +399,15 @@ export function FocusGoals({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleSetFocus(goal.id)}
-                      className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors"
+                      disabled={settingFocus === goal.id}
+                      className="p-2 hover:bg-[#F2F0E9] rounded-lg transition-colors disabled:opacity-50"
                       title="Set as focus"
                     >
-                      <Star className="w-5 h-5 text-[#D4A853]" />
+                      {settingFocus === goal.id ? (
+                        <div className="w-5 h-5 border-2 border-[#D4A853] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Star className="w-5 h-5 text-[#D4A853]" />
+                      )}
                     </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
